@@ -170,6 +170,10 @@ class TwitchChatLib {
             
             case "tip":
                 CLIENTS["BOT"].say( target,`You can tip here: https://streamlabs.com/${RemoveHashtag(target)}/tip!`);
+                
+            case "tiktok":
+                CLIENTS["BOT"].say( target,`Go check out lightylb's tiktok https://www.tiktok.com/@lightbylb!`);
+
         }
     }
     }
