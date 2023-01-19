@@ -1,0 +1,28 @@
+{
+  "devDependencies": {
+    "dotenv": "^16.0.3"
+  },
+  "dependencies": {
+    "tmi.js": "^1.8.5"
+  },
+  "name": "thebrightcandle",
+  "description": "this is a multi purpose twitch bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DinooSaaw/thebrightcandle.git"
+  },
+  "keywords": [
+    "twitch"
+  ],
+  "author": "DinooSaaw",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DinooSaaw/thebrightcandle/issues"
+  },
+  "homepage": "https://github.com/DinooSaaw/thebrightcandle#readme"
+}
