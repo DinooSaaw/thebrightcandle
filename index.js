@@ -151,6 +151,10 @@ class TwitchChatLib {
                     utime = response.body
                     CLIENTS["BOT"].say( target,`This stream has been going for: ${utime}`);
                 })
+                
+                case "prime":
+                    CLIENTS["BOT"].say( target,`Subscribe and support ${RemoveHashtag(target)} with Twitch Prime! Every month, Twitch Prime members get a free subscription on Twitch.tv, exclusive in-game loot, free games PLUS all the benefits included with Amazon Prime. https://www.twitch.tv/prime`);
+
         }
     }
     }
