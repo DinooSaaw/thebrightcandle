@@ -1,7 +1,7 @@
 module.exports = require("./mongoose/mongoose.js"); // Exports the mongoose module
 
 require("dotenv").config(); // Required for handling environment variables
-
+const needle = require('needle'); // Required for HTTPS requests
 const tmi = require("tmi.js"); // Required for connecting to Twitch's chat service
 const chalk = require("chalk"); // Optional for colorizing
 const { MongoClient } = require("mongodb"); // Required for connecting to MongoDB server and performing perform various operations such as CRUD
@@ -120,19 +120,32 @@ class TwitchChatLib {
         console.log(chat);
         break;
       case "whisper":
-        let whisper = `[${context["user-id"]}]`;
-        whisper += ` {whisper} | ${context["display-name"].toLowerCase()}`;
+        let whisper = `[${context["user-id"]}]`;  // Assign the user ID to the ID variable
+        whisper += ` {whisper} | ${context["display-name"].toLowerCase()}`; // Add the string '{whisper} | ' and the user's display name (converted to lowercase) to the 'whisper' variable
         whisper += ` || `;
         whisper += msg;
         console.log(whisper);
         break;
-      default:
-        console.log(context);
+      default: // If the value of 'type' does not match any of the case values, the code in this block will execute
+        console.log(context); // Log the entire 'context' variable to the console
         break;
     }
 
-    if (self) return;
-    if (msg.startsWith("!")) {
+    if (self) return; // Check if the value of the 'self' variable is truthy, if so, return and exit the function
+    if (msg.startsWith("!")) { // Check if the message starts with an exclamation point
+
+    if(target == Bot.channels[0]){ // Check if the value of the 'target' variable is the same as the second element in the 'Bot.channels' array
+        let args = msg.split(" ") // Split the message into an array of arguments using a space as the separator
+        let commandName = args[0].slice(1) // Get the command name by slicing the Exclamation mark of the 'args'
+
+        switch (commandName) { // Check the value of the 'commandName' variable
+
+
+            case "commands" || "commands" || "command":
+                CLIENTS["BOT"].say( target,`This channel has access to the following commands: `);
+
+        }
+    }
     }
   }
 }
