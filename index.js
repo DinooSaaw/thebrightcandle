@@ -137,7 +137,7 @@ class TwitchChatLib {
     if(target == Bot.channels[0]){ // Check if the value of the 'target' variable is the same as the second element in the 'Bot.channels' array
         let args = msg.split(" ") // Split the message into an array of arguments using a space as the separator
         let commandName = args[0].slice(1) // Get the command name by slicing the Exclamation mark of the 'args'
-
+        let Author = context["display-name"]
         switch (commandName) { // Check the value of the 'commandName' variable
 
 
@@ -152,8 +152,11 @@ class TwitchChatLib {
                     CLIENTS["BOT"].say( target,`This stream has been going for: ${utime}`);
                 })
                 
-                case "prime":
-                    CLIENTS["BOT"].say( target,`Subscribe and support ${RemoveHashtag(target)} with Twitch Prime! Every month, Twitch Prime members get a free subscription on Twitch.tv, exclusive in-game loot, free games PLUS all the benefits included with Amazon Prime. https://www.twitch.tv/prime`);
+            case "prime":
+                CLIENTS["BOT"].say( target,`Subscribe and support ${RemoveHashtag(target)} with Twitch Prime! Every month, Twitch Prime members get a free subscription on Twitch.tv, exclusive in-game loot, free games PLUS all the benefits included with Amazon Prime. https://www.twitch.tv/prime`);
+                    
+            case "lurk":
+                CLIENTS["BOT"].say( target,`/me ${Author} just blew out a candle and is now lurking in the shadows they will be missed! FeelsBadMan!`);
 
         }
     }
