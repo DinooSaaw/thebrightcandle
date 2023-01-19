@@ -3,7 +3,7 @@ module.exports = require('./mongoose/mongoose.js'); // Exports the mongoose modu
 require("dotenv").config(); // Required for handling environment variables
 
 const tmi = require("tmi.js"); // Required for connecting to Twitch's chat service
-
+const chalk = require("chalk"); // Optional for colorizing
 const Bot = require("./auth/thebrightcandle.json") // JSON file for "BOT" client authentication
 const Dino = require("./auth/dinoosaaw.json") // JSON file for "DINO" client authentication
 
@@ -12,12 +12,20 @@ let CLIENTS = [];  // An array to hold the clients
 class TwitchChatLib { // Class for handling Twitch events
 
     async onConnectedHandler(addr, port) { // Event handler for "connected" event
-        console.log("Connected", addr, port);
+        let message = chalk.hex("6441a5")(`[000000000] `);
+        message += chalk.hex("a970ff")(`| #TWITCH | `)
+        message += (`Succeeded to connect to ${addr}:${port}`)
+        console.log(message);
     }
 
     async onDisconnectedHandler(reason) { // Event handler for "disconnected" event
-        console.log("Disconnected", reason);
+        let message = chalk.hex("6441a5")(`[000000000] `);
+        message += chalk.hex("a970ff")(`| #TWITCH | `)
+        message += chalk.red.bold(`Disconnected!`)
+        message += reason;
+        console.log(message);
     }
+
 }
 
 
