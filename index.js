@@ -1,3 +1,5 @@
+module.exports = require('./mongoose/mongoose.js');
+
 require("dotenv").config();
 
 const tmi = require("tmi.js");
