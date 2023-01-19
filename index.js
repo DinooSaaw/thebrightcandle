@@ -144,6 +144,13 @@ class TwitchChatLib {
             case "commands" || "commands" || "command":
                 CLIENTS["BOT"].say( target,`This channel has access to the following commands: `);
 
+            case "uptime":
+                let utime;
+                await needle.get(`https://decapi.me/twitch/uptime/lightbylb`, function(error, response) {
+                    if (!error && response.statusCode == 200)
+                    utime = response.body
+                    CLIENTS["BOT"].say( target,`This stream has been going for: ${utime}`);
+                })
         }
     }
     }
