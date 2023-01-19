@@ -157,7 +157,19 @@ class TwitchChatLib {
                     
             case "lurk":
                 CLIENTS["BOT"].say( target,`/me ${Author} just blew out a candle and is now lurking in the shadows they will be missed! FeelsBadMan!`);
-
+                
+            case "sub" || "subscribe":
+                CLIENTS["BOT"].say( target,`https://www.twitch.tv/subs/${RemoveHashtag(target)}!`);
+                
+            case "time":
+                let time;
+                await needle.get(`https://www.timeapi.io/api/Time/current/zone?timeZone=Australia/Melbourne`, function(error, response) {
+                    if (!error && response.statusCode == 200)
+                    CLIENTS["BOT"].say( target,`The time for ${RemoveHashtag(target)} is ${response.body.time} on ${response.body.date}!`);
+                })
+            
+            case "tip":
+                CLIENTS["BOT"].say( target,`You can tip here: https://streamlabs.com/${RemoveHashtag(target)}/tip!`);
         }
     }
     }
