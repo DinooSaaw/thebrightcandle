@@ -232,8 +232,10 @@ class TwitchChatLib {
 
               case "gang" || "squad" || "duo" || "playingwith":
                 CLIENTS["BOT"].say(target, `${RemoveHashtag(target)} is playing with ${command.data}`);
-              
-              
+                
+              case "pride":
+                CLIENTS["BOT"].say(target, `AsexualPride BisexualPride GayPride GenderFluidPride IntersexPride LesbianPride NonbinaryPride PansexualPride TransgenderPride`);
+
         }
     }
     }
