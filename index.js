@@ -213,7 +213,15 @@ class TwitchChatLib {
                   if (!error && response.statusCode == 200)
                   CLIENTS["BOT"].say(target, `${Author} has been following for ${response.body}!`);
                 })
-                
+
+              case "commercial" || "ads":
+                CLIENTS["BOT"].say( target, `Ads are ran in the stream to turn off pre-roll. If you dont want to see ads you can always subscribe to the channel. Remember twitch prime give you a free subscription`);
+                if (context.mod) {
+                  CLIENTS["LIGHT"].commercial("channel", 120).then((data) => {
+                    console.log(`[TWITCH] Commercial ran in ${data.channel} for ${data.seconds}sec`);
+                  })
+              }
+
         }
     }
     }
