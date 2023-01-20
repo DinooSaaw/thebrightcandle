@@ -56,9 +56,11 @@ class TwitchChatLib {
     let msg = message.toLowerCase(); // Declare twitchat message in lowercase
     let colour; // Declare a variable to store the color of the user
     let ID = "000000000"; // Declare an ID variable and set it to a default value
+    let bannableMsg; // bannableMsg variable is used to store a message that has violated community guidelines and may result in a ban for the user. 
+    let timeoutableMsg; // timeoutableMsg variable is used to store a message that has violated community guidelines and may result in a timeout for the user.
     if (context["customr-reward-id"]) {
       // Check if a custom reward id is present,
-      console.log(context["customr-reward-id"]);
+      console.log(`custom reward id is present:`, context["customr-reward-id"]);
     }
 
     switch (context["message-type"]) {
@@ -136,6 +138,10 @@ class TwitchChatLib {
     }
 
     if (self) return; // Check if the value of the 'self' variable is truthy, if so, return and exit the function
+
+    BannableMsgCheck(msg, context, target)
+    timeoutableMsgCheck(msg, context, target)
+    
     if (msg.startsWith("!")) {
       // Check if the message starts with an exclamation point
 
@@ -403,6 +409,26 @@ function ReadTitle(target) {
         CLIENTS["BOT"].say(target, `The title is: ${response.body}!`);
     }
   );
+}
+
+async function BannableMsgCheck(msg, context, target) {
+  const botmessageDataBase = await settingsDataBaseQuery({ _id: "bannedmsgs" }); // get the array of trigger words/phrases
+  let check = botmessageDataBase.msg.filter((word) => msg.includes(word)); // check if the message contains any of the trigger words/phrases
+  if (check.length > 0) {
+
+    if (context.mod) return; // check if the sender is a moderator, if so return
+    CLIENTS["SELF"].ban(target, context["display-name"], `${context["display-name"]} has spoken the words that shall never been spoken | automated by TheBrightCandle`)
+  }
+}
+
+async function timeoutableMsgCheck(msg, context, target) {
+  const botmessageDataBase = await settingsDataBaseQuery({ _id: "timeoutmsg" }); // get the array of trigger words/phrases
+  let check = botmessageDataBase.msg.filter((word) => msg.includes(word)); // check if the message contains any of the trigger words/phrases
+  if (check.length > 0) {
+    
+    if (context.mod) return; // check if the sender is a moderator, if so return
+    CLIENTS["SELF"].timeout(target, context["display-name"], 315, `${context["display-name"]} has spoken the words that shall never been spoken | automated by TheBrightCandle`)
+  }
 }
 
 let botclients = new BotClients(); // create a new instance of BotClients
