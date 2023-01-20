@@ -204,6 +204,16 @@ class TwitchChatLib {
               } else {
                 CLIENTS["BOT"].say( target, `Invalid 2Outh Token`);
               }
+              
+              case "brightness":
+                CLIENTS["BOT"].say( target, `${Author} is illuminating ${Math.floor(Math.random() * 3000)} lumens`);
+
+              case "followerage" || "followage":
+                needle("get", `https://decapi.me/twitch/followage/lightbylb/${Author}`, function(error, response) {
+                  if (!error && response.statusCode == 200)
+                  CLIENTS["BOT"].say(target, `${Author} has been following for ${response.body}!`);
+                })
+                
         }
     }
     }
