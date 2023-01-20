@@ -225,7 +225,10 @@ class TwitchChatLib {
               case "so" || "shoutout":
                 if (context.mod && args.count == 2){
                   CLIENTS["BOT"].say(target, `/shoutout ${Author}`);
-                }
+              }
+
+              case "bttv" || "7tv" || "ffz":
+                CLIENTS["BOT"].say(target, `wondering why chat is spamming KEKW , HUH and Clueless ? Add the BTTV betterttv.com 7TV 7tv.app and FFZ frankerfacez.com browser extensions to see emotes!`);
         }
     }
     }
