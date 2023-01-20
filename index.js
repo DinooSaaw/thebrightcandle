@@ -197,6 +197,13 @@ class TwitchChatLib {
               } else {
                 CLIENTS["BOT"].say( target, `Invalid 2Outh Token`);
               }
+
+            case "title":
+              if (args.count < 1 || !context.mod) {
+                ReadTitle(target)
+              } else {
+                CLIENTS["BOT"].say( target, `Invalid 2Outh Token`);
+              }
         }
     }
     }
@@ -254,6 +261,13 @@ function ReadGame(target) {
   needle("get", `https://decapi.me/twitch/game/${RemoveHashtag(target)}`, function(error, response) { // This function uses the needle library to make a GET request to the decapi.me Twitch API
     if (!error && response.statusCode == 200) // Check for errors and a successful status code
     CLIENTS["BOT"].say(target, `The game is: ${response.body}!`);  // Use the say method from the CLIENTS object to send a message to the target channel
+  })
+}
+
+function ReadTitle(target) {
+  needle("get", `https://decapi.me/twitch/title/${RemoveHashtag(target)}`, function(error, response) {
+    if (!error && response.statusCode == 200)
+    CLIENTS["BOT"].say(target, `The title is: ${response.body}!`);
   })
 }
 
