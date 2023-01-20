@@ -241,6 +241,9 @@ class TwitchChatLib {
                 
               case "delay":
                 CLIENTS["BOT"].say(target, `just a smidge of ${command.data} on the stream.`);
+                
+              case "english":
+                CLIENTS["BOT"].say(target, `This is a english stream please refrain from speaking a differnt langThis is a english stream please refrain from speaking a different language`);
 
         }
     }
