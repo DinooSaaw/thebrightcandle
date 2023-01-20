@@ -244,6 +244,10 @@ class TwitchChatLib {
                 
               case "english":
                 CLIENTS["BOT"].say(target, `This is a english stream please refrain from speaking a differnt langThis is a english stream please refrain from speaking a different language`);
+                
+              case "drops":
+                  CLIENTS["BOT"].say(target, command.data);
+
 
         }
     }
