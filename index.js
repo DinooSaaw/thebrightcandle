@@ -190,6 +190,13 @@ class TwitchChatLib {
                 
             case "dino":
               CLIENTS["BOT"].say( target, `Dino is the Best Mod.!`);
+              
+            case "game":
+              if (args.count < 1 || !context.mod) {
+                ReadGame(target)
+              } else {
+                CLIENTS["BOT"].say( target, `Invalid 2Outh Token`);
+              }
         }
     }
     }
@@ -241,6 +248,13 @@ async function GetRank() {
         console.log(data);
         return `Solo/Duo: ${data[0].tier} ${data[0].rank} at ${data[0].leaguePoints} LP. Flex: ${data[1].tier} ${data[1].rank} at ${data[1].leaguePoints}LP ` // Return a string that displays the summoner's solo/duo and flex rank, as well as their LP
     })
+}
+
+function ReadGame(target) {
+  needle("get", `https://decapi.me/twitch/game/${RemoveHashtag(target)}`, function(error, response) { // This function uses the needle library to make a GET request to the decapi.me Twitch API
+    if (!error && response.statusCode == 200) // Check for errors and a successful status code
+    CLIENTS["BOT"].say(target, `The game is: ${response.body}!`);  // Use the say method from the CLIENTS object to send a message to the target channel
+  })
 }
 
 let botclients = new BotClients(); // create a new instance of BotClients
