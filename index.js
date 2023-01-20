@@ -7,6 +7,7 @@ const chalk = require("chalk"); // Optional for colorizing
 const { MongoClient } = require("mongodb"); // Required for connecting to MongoDB server and performing perform various operations such as CRUD
 const Bot = require("./auth/thebrightcandle.json"); // JSON file for "BOT" client authentication
 const Dino = require("./auth/dinoosaaw.json"); // JSON file for "DINO" client authentication
+const MongoDBclient = new MongoClient(process.env.DATABASEURL); // Create a new MongoClient instance and connect to the MongoDB server using the URL stored in the DATABASEURL environment variable
 
 let CLIENTS = []; // An array to hold the clients
 
@@ -34,6 +35,9 @@ class TwitchChatLib {
     let msg = message.toLowerCase(); // convert the message to lowercase
 
     const botmessageDataBase = await settingsDataBaseQuery({ _id: "botmsgs" }); // get the array of trigger words/phrases
+    if (botmessageDataBase == null) {
+      return console.error("Failed to get botmsg")
+    }
     let check = botmessageDataBase.msg.filter((word) => msg.includes(word)); // check if the message contains any of the trigger words/phrases
     if (check.length > 0) {
       console.log("onBotMessageHandler Trigged");
@@ -149,14 +153,19 @@ class TwitchChatLib {
         let commandName = args[0].slice(1); // Get the command name by slicing the Exclamation mark of the 'args'
         let mentionUser = args[1]; // Get the command name by slicing the Exclamation mark of the 'args'
         let Author = context["display-name"];
+
+        let command = await commandDataBaseQuery({ aliases: commandName })
+        if(command == null) return console.log("Failed to load command " + commandName)
+        
         switch (
           commandName // Check the value of the 'commandName' variable
         ) {
-          case "commands" || "commands" || "command":
+          case "commands" || "command":
             CLIENTS["BOT"].say(
               target,
               `This channel has access to the following commands: `
             );
+            break;
 
           case "uptime":
             let utime;
@@ -170,6 +179,7 @@ class TwitchChatLib {
                 );
               }
             );
+            break;
 
           case "prime":
             CLIENTS["BOT"].say(
@@ -178,18 +188,21 @@ class TwitchChatLib {
                 target
               )} with Twitch Prime! Every month, Twitch Prime members get a free subscription on Twitch.tv, exclusive in-game loot, free games PLUS all the benefits included with Amazon Prime. https://www.twitch.tv/prime`
             );
+            break;
 
           case "lurk":
             CLIENTS["BOT"].say(
               target,
-              `/me ${Author} just blew out a candle and is now lurking in the shadows they will be missed! FeelsBadMan!`
+              `/me ${Author} ${command.data}`
             );
+            break;
 
           case "sub" || "subscribe":
             CLIENTS["BOT"].say(
               target,
               `https://www.twitch.tv/subs/${RemoveHashtag(target)}!`
             );
+            break;
 
           case "time":
             let time;
@@ -205,6 +218,7 @@ class TwitchChatLib {
                   );
               }
             );
+            break;
 
           case "tip":
             CLIENTS["BOT"].say(
@@ -214,11 +228,14 @@ class TwitchChatLib {
               )}/tip!`
             );
 
+            break;
+          
           case "tiktok":
             CLIENTS["BOT"].say(
               target,
-              `Go check out lightylb's tiktok https://www.tiktok.com/@lightbylb!`
+              command.data
             );
+            break;
 
           case "hug":
             if (!mentionUser) return;
@@ -227,18 +244,22 @@ class TwitchChatLib {
               target,
               `/me ${Author} gives a big old hug to ${mentionUser} <3`
             );
+            break;
 
           case "discord":
             CLIENTS["BOT"].say(
               target,
-              `https://discord.gg/e8r4aj8Qtg! Join up the discord!`
+              command.data
             );
+            break;
 
           case "rank":
             CLIENTS["BOT"].say(target, GetRank());
+            break;
 
           case "dino":
-            CLIENTS["BOT"].say(target, `Dino is the Best Mod.!`);
+            CLIENTS["BOT"].say(target, command.data);
+            break;
 
           case "game":
             if (args.count < 1 || !context.mod) {
@@ -246,6 +267,7 @@ class TwitchChatLib {
             } else {
               CLIENTS["BOT"].say(target, `Invalid 2Outh Token`);
             }
+            break;
 
           case "title":
             if (args.count < 1 || !context.mod) {
@@ -253,6 +275,7 @@ class TwitchChatLib {
             } else {
               CLIENTS["BOT"].say(target, `Invalid 2Outh Token`);
             }
+            break;
 
           case "brightness":
             CLIENTS["BOT"].say(
@@ -261,6 +284,7 @@ class TwitchChatLib {
                 Math.random() * 3000
               )} lumens`
             );
+            break;
 
           case "followerage" || "followage":
             needle(
@@ -274,11 +298,12 @@ class TwitchChatLib {
                   );
               }
             );
+            break;
 
           case "commercial" || "ads":
             CLIENTS["BOT"].say(
               target,
-              `Ads are ran in the stream to turn off pre-roll. If you dont want to see ads you can always subscribe to the channel. Remember twitch prime give you a free subscription`
+              command.data
             );
             if (context.mod) {
               CLIENTS["LIGHT"].commercial("channel", 120).then((data) => {
@@ -287,54 +312,65 @@ class TwitchChatLib {
                 );
               });
             }
+            break;
 
           case "so" || "shoutout":
-            if (context.mod && args.count == 2) {
+            if (context.mod) {
               CLIENTS["BOT"].say(target, `/shoutout ${Author}`);
             }
+            break;
 
           case "bttv" || "7tv" || "ffz":
             CLIENTS["BOT"].say(
               target,
-              `wondering why chat is spamming KEKW , HUH and Clueless ? Add the BTTV betterttv.com 7TV 7tv.app and FFZ frankerfacez.com browser extensions to see emotes!`
+              command.data
             );
+            break;
 
           case "gang" || "squad" || "duo" || "playingwith":
             CLIENTS["BOT"].say(
               target,
               `${RemoveHashtag(target)} is playing with ${command.data}`
             );
+            break;
 
           case "pride":
             CLIENTS["BOT"].say(
               target,
-              `AsexualPride BisexualPride GayPride GenderFluidPride IntersexPride LesbianPride NonbinaryPride PansexualPride TransgenderPride`
+              command.data
             );
+            break;
 
           case "uwu":
             CLIENTS["BOT"].say(
               target,
-              `did someone say ᵘʷᵘ oh ᵘʷᵘ ᵘʷᵘᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ sorry guysᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ sorry im dropping ᵘʷᵘ my uwus all over the ᵘʷᵘ place ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ sorry`
+              command.data
             );
+            break;
 
           case "delay":
             CLIENTS["BOT"].say(
               target,
-              `just a smidge of ${command.data} on the stream.`
+              command.data
             );
+            break;
 
           case "english":
             CLIENTS["BOT"].say(
               target,
               `This is a english stream please refrain from speaking a differnt langThis is a english stream please refrain from speaking a different language`
             );
+            break;
 
           case "drops":
             CLIENTS["BOT"].say(target, command.data);
+            break;
         }
       }
     }
   }
+
+
 }
 
 class BotClients {
@@ -355,16 +391,17 @@ class BotClients {
 }
 
 async function settingsDataBaseQuery(query) {
-  const MongoDBclient = new MongoClient(process.env.DATABASEURL); // Create a new MongoClient instance and connect to the MongoDB server using the URL stored in the DATABASEURL environment variable
-  try {
     let database = MongoDBclient.db("twitch"); // Select the "twitch" database
     let settingsDataBase = database.collection("settings"); // Select the "settings" collection
     let result = await settingsDataBase.findOne(query); // Perform a findOne query on the "settings" collection using the provided query object
     return result; // Return the result of the query
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await MongoDBclient.close();
-  }
+}
+
+async function commandDataBaseQuery(query) {
+  let database = MongoDBclient.db("twitch"); // Select the "twitch" database
+  let settingsDataBase = database.collection("commands"); // Select the "commands" collection
+  let result = await settingsDataBase.findOne(query);
+  return result; // Return the result of the query
 }
 
 function RemoveHashtag(channel) {
@@ -411,6 +448,9 @@ function ReadTitle(target) {
 
 async function BannableMsgCheck(msg, context, target) {
   const botmessageDataBase = await settingsDataBaseQuery({ _id: "bannedmsgs" }); // get the array of trigger words/phrases
+  if (botmessageDataBase == null) {
+    return console.error("Failed to get bannedmsgs")
+  }
   let check = botmessageDataBase.msg.filter((word) => msg.includes(word)); // check if the message contains any of the trigger words/phrases
   if (check.length > 0) {
 
@@ -421,6 +461,9 @@ async function BannableMsgCheck(msg, context, target) {
 
 async function timeoutableMsgCheck(msg, context, target) {
   const botmessageDataBase = await settingsDataBaseQuery({ _id: "timeoutmsg" }); // get the array of trigger words/phrases
+  if (botmessageDataBase == null) {
+    return console.error("Failed to get bannedmsgs")
+  }
   let check = botmessageDataBase.msg.filter((word) => msg.includes(word)); // check if the message contains any of the trigger words/phrases
   if (check.length > 0) {
     
