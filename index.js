@@ -222,6 +222,10 @@ class TwitchChatLib {
                   })
               }
 
+              case "so" || "shoutout":
+                if (context.mod && args.count == 2){
+                  CLIENTS["BOT"].say(target, `/shoutout ${Author}`);
+                }
         }
     }
     }
