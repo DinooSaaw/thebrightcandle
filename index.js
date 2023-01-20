@@ -229,6 +229,11 @@ class TwitchChatLib {
 
               case "bttv" || "7tv" || "ffz":
                 CLIENTS["BOT"].say(target, `wondering why chat is spamming KEKW , HUH and Clueless ? Add the BTTV betterttv.com 7TV 7tv.app and FFZ frankerfacez.com browser extensions to see emotes!`);
+
+              case "gang" || "squad" || "duo" || "playingwith":
+                CLIENTS["BOT"].say(target, `${RemoveHashtag(target)} is playing with ${command.data}`);
+              
+              
         }
     }
     }
