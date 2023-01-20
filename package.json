@@ -4,6 +4,7 @@
     "dotenv": "^16.0.3"
   },
   "dependencies": {
+    "leaguejs": "^2.3.1",
     "mongoose": "^6.8.4",
     "needle": "^3.2.0",
     "tmi.js": "^1.8.5"

@@ -3,6 +3,8 @@ module.exports = require("./mongoose/mongoose.js"); // Exports the mongoose modu
 require("dotenv").config(); // Required for handling environment variables
 const needle = require('needle'); // Required for HTTPS requests
 const tmi = require("tmi.js"); // Required for connecting to Twitch's chat service
+const LeagueJS = require("leaguejs"); // Required for League Rank Command
+let leagueJs = new LeagueJS(process.env.RIOTAPI);
 const chalk = require("chalk"); // Optional for colorizing
 const { MongoClient } = require("mongodb"); // Required for connecting to MongoDB server and performing perform various operations such as CRUD
 const Bot = require("./auth/thebrightcandle.json"); // JSON file for "BOT" client authentication
@@ -137,6 +139,7 @@ class TwitchChatLib {
     if(target == Bot.channels[0]){ // Check if the value of the 'target' variable is the same as the second element in the 'Bot.channels' array
         let args = msg.split(" ") // Split the message into an array of arguments using a space as the separator
         let commandName = args[0].slice(1) // Get the command name by slicing the Exclamation mark of the 'args'
+        let mentionUser = args[1] // Get the command name by slicing the Exclamation mark of the 'args'
         let Author = context["display-name"]
         switch (commandName) { // Check the value of the 'commandName' variable
 
@@ -173,7 +176,17 @@ class TwitchChatLib {
                 
             case "tiktok":
                 CLIENTS["BOT"].say( target,`Go check out lightylb's tiktok https://www.tiktok.com/@lightbylb!`);
+                
+            case "hug":
+                if (!mentionUser) return;
+                if (args.count < 2) return;
+                CLIENTS["BOT"].say( target,`/me ${Author} gives a big old hug to ${mentionUser} <3`);
+                
+            case "discord":
+                CLIENTS["BOT"].say( target,`https://discord.gg/e8r4aj8Qtg! Join up the discord!`);
 
+            case "rank":
+                CLIENTS["BOT"].say( target, GetRank());
         }
     }
     }
@@ -213,6 +226,18 @@ async function settingsDataBaseQuery(query) {
 function RemoveHashtag(channel) {
   let CleanChannelName = channel.replace("#", ""); // Create a variable to store the cleaned channel name
   return CleanChannelName;  // Return the cleaned channel name
+}
+
+async function GetRank() {
+     await leagueJs.League.gettingLeagueEntriesForSummonerId( // This function uses the leagueJs library to get the rank of a summoner based on their summoner ID and region
+        process.env.RIOTSUMMONERID,
+        process.env.RIOTREGION
+    ).then((data) => {
+        "use strict";
+        if (data = null) return Rank = "Unranked" // If data is null, the summoner is unranked
+        console.log(data);
+        return `Solo/Duo: ${data[0].tier} ${data[0].rank} at ${data[0].leaguePoints} LP. Flex: ${data[1].tier} ${data[1].rank} at ${data[1].leaguePoints}LP ` // Return a string that displays the summoner's solo/duo and flex rank, as well as their LP
+    })
 }
 
 let botclients = new BotClients(); // create a new instance of BotClients
