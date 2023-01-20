@@ -235,6 +235,10 @@ class TwitchChatLib {
                 
               case "pride":
                 CLIENTS["BOT"].say(target, `AsexualPride BisexualPride GayPride GenderFluidPride IntersexPride LesbianPride NonbinaryPride PansexualPride TransgenderPride`);
+                
+              case "uwu":
+                CLIENTS["BOT"].say(target, `did someone say ᵘʷᵘ oh ᵘʷᵘ ᵘʷᵘᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ sorry guysᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ sorry im dropping ᵘʷᵘ my uwus all over the ᵘʷᵘ place ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ sorry`);
+
 
         }
     }
