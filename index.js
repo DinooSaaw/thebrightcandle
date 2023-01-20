@@ -187,6 +187,9 @@ class TwitchChatLib {
 
             case "rank":
                 CLIENTS["BOT"].say( target, GetRank());
+                
+            case "dino":
+              CLIENTS["BOT"].say( target, `Dino is the Best Mod.!`);
         }
     }
     }
