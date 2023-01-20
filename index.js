@@ -1,5 +1,3 @@
-module.exports = require("./mongoose/mongoose.js"); // Exports the mongoose module
-
 require("dotenv").config(); // Required for handling environment variables
 const needle = require("needle"); // Required for HTTPS requests
 const tmi = require("tmi.js"); // Required for connecting to Twitch's chat service
