@@ -238,7 +238,9 @@ class TwitchChatLib {
                 
               case "uwu":
                 CLIENTS["BOT"].say(target, `did someone say ᵘʷᵘ oh ᵘʷᵘ ᵘʷᵘᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ sorry guysᵘʷᵘ ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ sorry im dropping ᵘʷᵘ my uwus all over the ᵘʷᵘ place ᵘʷᵘ ᵘʷᵘ ᵘʷᵘ sorry`);
-
+                
+              case "delay":
+                CLIENTS["BOT"].say(target, `just a smidge of ${command.data} on the stream.`);
 
         }
     }
