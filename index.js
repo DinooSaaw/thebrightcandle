@@ -2,13 +2,14 @@ require("dotenv").config(); // Required for handling environment variables
 const needle = require("needle"); // Required for HTTPS requests
 const tmi = require("tmi.js"); // Required for connecting to Twitch's chat service
 const LeagueJS = require("leaguejs"); // Required for League Rank Command
-let leagueJs = new LeagueJS(process.env.RIOTAPI);
 const chalk = require("chalk"); // Optional for colorizing
 const { MongoClient } = require("mongodb"); // Required for connecting to MongoDB server and performing perform various operations such as CRUD
 const Bot = require("./auth/thebrightcandle.json"); // JSON file for "BOT" client authentication
 const Dino = require("./auth/dinoosaaw.json"); // JSON file for "DINO" client authentication
 const MongoDBclient = new MongoClient(process.env.DATABASEURL); // Create a new MongoClient instance and connect to the MongoDB server using the URL stored in the DATABASEURL environment variable
+const moment = require('moment'); // Required for creating timestamps
 
+let leagueJs = new LeagueJS(process.env.RIOTAPI);
 let CLIENTS = []; // An array to hold the clients
 
 class TwitchChatLib {
@@ -16,7 +17,8 @@ class TwitchChatLib {
 
   async onConnectedHandler(addr, port) {
     // Event handler for "connected" event
-    let message = chalk.hex("6441a5")(`[000000000] `);
+    let message = chalk.grey(`[${getTimestamp()}] `)
+    message += chalk.hex("6441a5")(`[000000000] `);
     message += chalk.hex("a970ff")(`| #TWITCH | `);
     message += `Succeeded to connect to ${addr}:${port}`;
     console.log(message);
@@ -24,7 +26,8 @@ class TwitchChatLib {
 
   async onDisconnectedHandler(reason) {
     // Event handler for "disconnected" event
-    let message = chalk.hex("6441a5")(`[000000000] `);
+    let message = chalk.grey(`[${getTimestamp()}] `)
+    message += chalk.hex("6441a5")(`[000000000] `);
     message += chalk.hex("a970ff")(`| #TWITCH | `);
     message += chalk.red.bold(`Disconnected!`);
     message += reason;
@@ -40,7 +43,6 @@ class TwitchChatLib {
     }
     let check = botmessageDataBase.msg.filter((word) => msg.includes(word)); // check if the message contains any of the trigger words/phrases
     if (check.length > 0) {
-      console.log("onBotMessageHandler Trigged");
 
       if (context.mod) return; // check if the sender is a moderator, if so return
 
@@ -70,7 +72,8 @@ class TwitchChatLib {
         if (context["user-id"] !== undefined) {
           ID = context["user-id"]; // Assign the user ID to the ID variable
         }
-        let action = chalk.hex("6441a5")(`[${ID}]`);
+        let action = chalk.grey(`[${getTimestamp()}] `);
+        action += chalk.hex("6441a5")(`[${ID}]`);
         action += chalk.hex(
           "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
         )(` | ${target} |`); // Assign a random color code to the target
@@ -100,7 +103,8 @@ class TwitchChatLib {
         if (context["user-id"] !== undefined) {
           ID = context["user-id"]; // Assign the user ID to the ID variable
         }
-        let chat = chalk.hex("6441a5")(`[${ID}]`);
+        let chat = chalk.grey(`[${getTimestamp()}] `);
+        chat += chalk.hex("6441a5")(`[${ID}]`);
         chat += chalk.hex(
           "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
         )(` | ${target} |`); // Assign a random color code to the target
@@ -127,7 +131,8 @@ class TwitchChatLib {
         console.log(chat);
         break;
       case "whisper":
-        let whisper = `[${context["user-id"]}]`; // Assign the user ID to the ID variable
+        let whisper = chalk.grey(`[${getTimestamp()}] `) // Assign the user ID to the ID variable
+        whisper += `[${context["user-id"]}]`; // Assign the user ID to the ID variable
         whisper += ` {whisper} | ${context["display-name"].toLowerCase()}`; // Add the string '{whisper} | ' and the user's display name (converted to lowercase) to the 'whisper' variable
         whisper += ` || `;
         whisper += msg;
@@ -370,7 +375,54 @@ class TwitchChatLib {
     }
   }
 
+  async onJoinHandler(channel, username, self) {
+    let db = await settingsDataBaseQuery({ _id: "botaccounts"})
+    if (self) {
+      let msg = chalk.grey(`[${getTimestamp()}] `);
+      msg += chalk.hex("6441a5")(`[000000000]`);
+      msg += chalk.hex("a970ff")(` | #TWITCH | `);
+      msg += `Successfully connected to: `;
+      msg += chalk.hex(
+        "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
+      )(channel);
+      console.log(msg);
+    }
+    else if (username == "dinoosaaw") return
+    else if (db.accounts.includes(username)) return
+    else {
+      let join = chalk.grey(`[${getTimestamp()}] `)
+      join += chalk.hex("6441a5")(`[000000000]`);
+      join += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+      join += chalk.green`${username} `
+      join += `Has joined`
+      console.log(join);
+  }
+  }
 
+  async onPartHandler(channel, username, self) {
+
+    let db = await settingsDataBaseQuery({ _id: "botaccounts"})
+    if (self) {
+      let msg = chalk.grey(`[${getTimestamp()}] `)
+      msg += chalk.hex("6441a5")(`[000000000]`);
+      msg += chalk.hex("a970ff")(` | #TWITCH | `);
+      msg += `Disconnected from: `;
+      msg += chalk.hex(
+        "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
+      )(channel);
+      console.log(msg); 
+    }
+    else if (username == "dinoosaaw") return
+    else if (db.accounts.includes(username)) return
+    else {
+      let part = chalk.grey(`[${getTimestamp()}] `)
+      part += chalk.hex("6441a5")(`[000000000]`);
+      part += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+      part += chalk.red`${username} `
+      part += `Has left`
+      console.log(part);
+  }
+  }
 }
 
 class BotClients {
@@ -383,7 +435,9 @@ class BotClients {
 
     CLIENTS["BOT"].on("connected", tl.onConnectedHandler); // assign the "onConnectedHandler" to the "connected" event
     CLIENTS["DINO"].on("message", tl.onBotMessageHandler); // asasing the "onBotMessageHandler" to the "message" event
-    CLIENTS["DINO"].on("message", tl.onMessageHandler); // asasing the "onMessageHandler" to the "message" event
+    CLIENTS["BOT"].on("message", tl.onMessageHandler); // asasing the "onMessageHandler" to the "message" event
+    CLIENTS["BOT"].on("join", tl.onJoinHandler); // asasing the "onMessageHandler" to the "message" event
+    CLIENTS["BOT"].on("part", tl.onPartHandler); // asasing the "onMessageHandler" to the "message" event
 
     CLIENTS["BOT"].connect(); // connect the "BOT" client
     CLIENTS["DINO"].connect(); // connect the "DINO" client
@@ -470,6 +524,11 @@ async function timeoutableMsgCheck(msg, context, target) {
     if (context.mod) return; // check if the sender is a moderator, if so return
     CLIENTS["SELF"].timeout(target, context["display-name"], 315, `${context["display-name"]} has spoken the words that shall never been spoken | automated by TheBrightCandle`)
   }
+}
+
+function getTimestamp() {
+  let MomentTimestamp = moment().format('HH:MM:SS').toString()  // This function uses the moment.js library to get the current timestamp
+  return MomentTimestamp.toString() // Return the timestamp as a string
 }
 
 let botclients = new BotClients(); // create a new instance of BotClients
