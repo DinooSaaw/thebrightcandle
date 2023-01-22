@@ -63,6 +63,7 @@ class TwitchChatLib {
     let ID = "000000000"; // Declare an ID variable and set it to a default value
     let bannableMsg; // bannableMsg variable is used to store a message that has violated community guidelines and may result in a ban for the user. 
     let timeoutableMsg; // timeoutableMsg variable is used to store a message that has violated community guidelines and may result in a timeout for the user.
+    let badges = context['badges-raw'].split(',');
     if (context["customr-reward-id"]) {
       // Check if a custom reward id is present,
       console.log(`custom reward id is present:`, context["customr-reward-id"]);
@@ -91,6 +92,12 @@ class TwitchChatLib {
         }
         if (context.turbo) {
           action += chalk.hex("59399a")(` {TURBO}`); // If the message is from a turbo user, add a label
+        }
+        if (context.turbo) {
+          action += chalk.hex("59399a")(` {TURBO}`); // If the message is from a turbo user, add a label
+        }
+        if (badges.includes('premium/1')) {
+          action += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a turbo user, add a label
         }
         colour = context.color;
         if (!colour)
@@ -125,6 +132,9 @@ class TwitchChatLib {
         if (context.turbo) {
           chat += chalk.hex("59399a")(` {TURBO}`); // If the message is from a turbo user, add a label
         }
+        if (badges.includes('premium/1')) {
+          chat += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a turbo user, add a label
+        }
         colour = context.color;
         if (!colour)
           colour =
@@ -134,7 +144,6 @@ class TwitchChatLib {
         chat += chalk.hex(colour)(` || `);
         chat += msg;
         console.log(chat);
-        console.log(context['badges-raw']);
         break;
       case "whisper":
         let whisper = chalk.grey(`[${getTimestamp()}] `) // Assign the user ID to the ID variable
@@ -147,6 +156,8 @@ class TwitchChatLib {
       default: // If the value of 'type' does not match any of the case values, the code in this block will execute
       // Log the entire 'context' variable to the console
         console.log(context);
+        console.log(context['badges-raw']);
+        console.log(badges);
         break;
     }
 
