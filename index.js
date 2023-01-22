@@ -57,6 +57,7 @@ class TwitchChatLib {
   }
 
   async onMessageHandler(target, context, message, self) {
+    let db = await streamerDataBaseQuery({ _id: RemoveHashtag(target) })
     let msg = message.toLowerCase(); // Declare twitchat message in lowercase
     let colour; // Declare a variable to store the color of the user
     let ID = "000000000"; // Declare an ID variable and set it to a default value
@@ -74,9 +75,11 @@ class TwitchChatLib {
         }
         let action = chalk.grey(`[${getTimestamp()}] `);
         action += chalk.hex("6441a5")(`[${ID}]`);
-        action += chalk.hex(
-          "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
-        )(` | ${target} |`); // Assign a random color code to the target
+        if (db){
+          action += chalk.hex(db.colour)(` | ${target} |`); // Assign a random color code to the target
+        } else {
+          action += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${target} |`); // Assign a random color code to the target
+        }
         if (RemoveHashtag(target) == context["display-name"].toLowerCase()) {
           action += chalk.hex("e91916")(` {STREAMER}`); // If the message is from the streamer, add a label
         }
@@ -105,9 +108,11 @@ class TwitchChatLib {
         }
         let chat = chalk.grey(`[${getTimestamp()}] `);
         chat += chalk.hex("6441a5")(`[${ID}]`);
-        chat += chalk.hex(
-          "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
-        )(` | ${target} |`); // Assign a random color code to the target
+        if (db){
+          chat += chalk.hex(db.colour)(` | ${target} |`); // Assign a random color code to the target
+        } else {
+          chat += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${target} |`); // Assign a random color code to the target
+        }
         if (RemoveHashtag(target) == context["display-name"].toLowerCase()) {
           chat += chalk.hex("e91916")(` {STREAMER}`); // If the message is from the streamer, add a label
         }
@@ -129,6 +134,7 @@ class TwitchChatLib {
         chat += chalk.hex(colour)(` || `);
         chat += msg;
         console.log(chat);
+        console.log(context['badges-raw']);
         break;
       case "whisper":
         let whisper = chalk.grey(`[${getTimestamp()}] `) // Assign the user ID to the ID variable
@@ -376,52 +382,97 @@ class TwitchChatLib {
   }
 
   async onJoinHandler(channel, username, self) {
-    let db = await settingsDataBaseQuery({ _id: "botaccounts"})
-    if (self) {
+     // this function will be executed when a user joins the channel
+    // it gets the settings and streamer database
+    let settingsdb = await settingsDataBaseQuery({ _id: "botaccounts"})
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    if (self) {  // if the user joining is the bot, log the successful connection
       let msg = chalk.grey(`[${getTimestamp()}] `);
       msg += chalk.hex("6441a5")(`[000000000]`);
       msg += chalk.hex("a970ff")(` | #TWITCH | `);
       msg += `Successfully connected to: `;
-      msg += chalk.hex(
-        "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
-      )(channel);
+      if (streamerdb){
+        msg += chalk.hex(streamerdb.colour)(channel);  
+      } else {
+        msg += chalk.hex(
+          "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
+        )(channel);
+      }
       console.log(msg);
     }
     else if (username == "dinoosaaw") return
-    else if (db.accounts.includes(username)) return
+    else if (settingsdb.accounts.includes(username)) return // if the user joining is part of accounts dont log
     else {
       let join = chalk.grey(`[${getTimestamp()}] `)
       join += chalk.hex("6441a5")(`[000000000]`);
-      join += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+      if (streamerdb){
+        join += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+      } else {
+        join += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+      }
       join += chalk.green`${username} `
       join += `Has joined`
       console.log(join);
   }
+
+  if (streamerdb.welcomeMsg === false) return // if the streamer has the welcome message off, return
+  else { // if the streamer has the welcome message on, check for specific users and send a welcome message
+    switch (username) {
+      case "dinoosaaw":
+        CLIENTS["BOT"].say(target, `/me Rawr!`);
+      case "lightbylb":
+        CLIENTS["BOT"].say(target, `/me A light bulb creates an environment by its mere presence.!`);
+      case "apollopepsi":
+        CLIENTS["BOT"].say(target, `/me Quick get the Eskie the Apollo Cans are here!`);
+      case "meme_aids":
+        CLIENTS["BOT"].say(target, `/me AHH, Who left the Memes Aids Out Panic!`);
+    }
+  }
   }
 
   async onPartHandler(channel, username, self) {
-
-    let db = await settingsDataBaseQuery({ _id: "botaccounts"})
-    if (self) {
+        // this function will be executed when a user leaves the channel
+    // it gets the settings and streamer database
+    let settingsdb = await settingsDataBaseQuery({ _id: "botaccounts"})
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    if (self) { // if the user leaving is the bot, log the successful disconnection
       let msg = chalk.grey(`[${getTimestamp()}] `)
       msg += chalk.hex("6441a5")(`[000000000]`);
       msg += chalk.hex("a970ff")(` | #TWITCH | `);
       msg += `Disconnected from: `;
-      msg += chalk.hex(
-        "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
-      )(channel);
+      if (streamerdb){
+        msg += chalk.hex(streamerdb.colour)(channel);  
+      } else {
+        msg += chalk.hex(
+          "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
+        )(channel);
+      }
       console.log(msg); 
     }
     else if (username == "dinoosaaw") return
-    else if (db.accounts.includes(username)) return
+    else if (settingsdb.accounts.includes(username)) return // if the user joining is part of accounts dont log
     else {
       let part = chalk.grey(`[${getTimestamp()}] `)
       part += chalk.hex("6441a5")(`[000000000]`);
-      part += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+      if (streamerdb){
+        part += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+      } else {
+        part += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+      }
       part += chalk.red`${username} `
       part += `Has left`
       console.log(part);
   }
+
+  }
+
+  async onNoticeHandler(channel, msgid, message) {
+    let notice = `[${getTimestamp()}] `
+    notice += ` [000668423]`
+    notice += ` | ${channel} |`
+    notice += ` | ${msgid} |`
+    notice += message
+    console.log(notice)
   }
 }
 
@@ -438,6 +489,7 @@ class BotClients {
     CLIENTS["BOT"].on("message", tl.onMessageHandler); // asasing the "onMessageHandler" to the "message" event
     CLIENTS["BOT"].on("join", tl.onJoinHandler); // asasing the "onMessageHandler" to the "message" event
     CLIENTS["BOT"].on("part", tl.onPartHandler); // asasing the "onMessageHandler" to the "message" event
+    CLIENTS["BOT"].on("notice", tl.onNoticeHandler); // asasing the "onMessageHandler" to the "message" event
 
     CLIENTS["BOT"].connect(); // connect the "BOT" client
     CLIENTS["DINO"].connect(); // connect the "DINO" client
@@ -454,6 +506,13 @@ async function settingsDataBaseQuery(query) {
 async function commandDataBaseQuery(query) {
   let database = MongoDBclient.db("twitch"); // Select the "twitch" database
   let settingsDataBase = database.collection("commands"); // Select the "commands" collection
+  let result = await settingsDataBase.findOne(query);
+  return result; // Return the result of the query
+}
+
+async function streamerDataBaseQuery(query) {
+  let database = MongoDBclient.db("twitch"); // Select the "twitch" database
+  let settingsDataBase = database.collection("streamers"); // Select the "streamers" collection
   let result = await settingsDataBase.findOne(query);
   return result; // Return the result of the query
 }
