@@ -63,7 +63,8 @@ class TwitchChatLib {
     let ID = "000000000"; // Declare an ID variable and set it to a default value
     let bannableMsg; // bannableMsg variable is used to store a message that has violated community guidelines and may result in a ban for the user. 
     let timeoutableMsg; // timeoutableMsg variable is used to store a message that has violated community guidelines and may result in a timeout for the user.
-    let badges = context['badges-raw'].split(',');
+    let badges = context["badges-raw"].split(',')
+
     if (context["customr-reward-id"]) {
       // Check if a custom reward id is present,
       console.log(`custom reward id is present:`, context["customr-reward-id"]);
@@ -97,7 +98,7 @@ class TwitchChatLib {
           action += chalk.hex("59399a")(` {TURBO}`); // If the message is from a turbo user, add a label
         }
         if (badges.includes('premium/1')) {
-          action += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a turbo user, add a label
+          action += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a prime user, add a label
         }
         colour = context.color;
         if (!colour)
@@ -133,7 +134,7 @@ class TwitchChatLib {
           chat += chalk.hex("59399a")(` {TURBO}`); // If the message is from a turbo user, add a label
         }
         if (badges.includes('premium/1')) {
-          chat += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a turbo user, add a label
+          chat += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a prime user, add a label
         }
         colour = context.color;
         if (!colour)
@@ -155,11 +156,11 @@ class TwitchChatLib {
         break;
       default: // If the value of 'type' does not match any of the case values, the code in this block will execute
       // Log the entire 'context' variable to the console
-        console.log(context);
-        console.log(context['badges-raw']);
-        console.log(badges);
-        break;
+      break;
     }
+    console.log(context['badges-raw']);
+    
+    console.log(badges);
 
     if (self) return; // Check if the value of the 'self' variable is truthy, if so, return and exit the function
 
