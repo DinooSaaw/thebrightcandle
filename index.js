@@ -63,7 +63,7 @@ class TwitchChatLib {
     let ID = "000000000"; // Declare an ID variable and set it to a default value
     let bannableMsg; // bannableMsg variable is used to store a message that has violated community guidelines and may result in a ban for the user. 
     let timeoutableMsg; // timeoutableMsg variable is used to store a message that has violated community guidelines and may result in a timeout for the user.
-
+    
     if (context["customr-reward-id"]) {
       // Check if a custom reward id is present,
       console.log(`custom reward id is present:`, context["customr-reward-id"]);
@@ -100,15 +100,17 @@ class TwitchChatLib {
         if (context.turbo) {
           action += chalk.hex("59399a")(` {TURBO}`); // If the message is from a turbo user, add a label
         }
-        if (context.badges.premium) {
-          action += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a prime user, add a label
-        }
-        if (context.badges.partner) {
-          action += chalk.hex("9146ff")(` {PARTNER}`); // If the message is from a partner user, add a label
-        }
-        if (context.badges.bits) {
-          let bitcolour = GetBitColour(context.badges.bits)
-          action += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`); // If the message is from a bits user, add a label
+        if (context.badges !== null) {
+          if (context.badges.premium) {
+            action += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a prime user, add a label
+          }
+          if (context.badges.partner) {
+            action += chalk.hex("9146ff")(` {PARTNER}`); // If the message is from a partner user, add a label
+          }
+          if (context.badges.bits) {
+            let bitcolour = GetBitColour(context.badges.bits)
+            action += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`); // If the message is from a bits user, add a label
+          }
         }
         colour = context.color;
         if (!colour)
@@ -150,15 +152,17 @@ class TwitchChatLib {
         if (context.turbo) {
           chat += chalk.hex("59399a")(` {TURBO}`); // If the message is from a turbo user, add a label
         }
-        if (context.badges.premium) {
-          chat += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a prime user, add a label
-        }
-        if (context.badges.partner) {
-          chat += chalk.hex("9146ff")(` {PARTNER}`); // If the message is from a partner user, add a label
-        }
-        if (context.badges.bits) {
-          let bitcolour = GetBitColour(context.badges.bits)
-          chat += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`); // If the message is from a bits user, add a label
+        if (context.badges !== null) {
+          if (context.badges.premium) {
+            chat += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a prime user, add a label
+          }
+          if (context.badges.partner) {
+            chat += chalk.hex("9146ff")(` {PARTNER}`); // If the message is from a partner user, add a label
+          }
+          if (context.badges.bits) {
+            let bitcolour = GetBitColour(context.badges.bits)
+            chat += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`); // If the message is from a bits user, add a label
+          }
         }
         colour = context.color;
         if (!colour)
@@ -643,5 +647,6 @@ function GetBitColour(bits) {
   if (bits >= "100") return "c982fc";
   if (bits >= "1") return "ccc9d0";
 }
+
 let botclients = new BotClients(); // create a new instance of BotClients
 botclients.twitchChat(); // call the twitchChat method.
