@@ -50,7 +50,7 @@ class TwitchChatLib {
         .ban(
           target,
           context["display-name"],
-          `trigger phrase: ${check} | automated by TheBrightCandle`
+          `trigger phrase: ${check} || automated by TheBrightCandle`
         )
         .catch(err(console.log(err))); // ban the user who sent the message, providing the trigger phrase and the automated source
     }
@@ -437,7 +437,6 @@ class TwitchChatLib {
       }
       console.log(msg);
     }
-    else if (username == "dinoosaaw") return
     else if (settingsdb.accounts.includes(username)) return // if the user joining is part of accounts dont log
     else {
       let join = chalk.grey(`[${getTimestamp()}] `)
@@ -456,13 +455,17 @@ class TwitchChatLib {
   else { // if the streamer has the welcome message on, check for specific users and send a welcome message
     switch (username) {
       case "dinoosaaw":
-        CLIENTS["BOT"].say(target, `/me Rawr!`);
+        CLIENTS["BOT"].say(channel, `/me Rawr!`);
+        break;
       case "lightbylb":
-        CLIENTS["BOT"].say(target, `/me A light bulb creates an environment by its mere presence.!`);
+        CLIENTS["BOT"].say(channel, `/me A light bulb creates an environment by its mere presence.!`);
+        break;
       case "apollopepsi":
-        CLIENTS["BOT"].say(target, `/me Quick get the Eskie the Apollo Cans are here!`);
+        CLIENTS["BOT"].say(channel, `/me Quick get the Eskie the Apollo Cans are here!`);
+        break;
       case "meme_aids":
-        CLIENTS["BOT"].say(target, `/me AHH, Who left the Memes Aids Out Panic!`);
+        CLIENTS["BOT"].say(channel, `/me AHH, Who left the Memes Aids Out Panic!`);
+        break;
     }
   }
   }
@@ -486,7 +489,6 @@ class TwitchChatLib {
       }
       console.log(msg); 
     }
-    else if (username == "dinoosaaw") return
     else if (settingsdb.accounts.includes(username)) return // if the user joining is part of accounts dont log
     else {
       let part = chalk.grey(`[${getTimestamp()}] `)
