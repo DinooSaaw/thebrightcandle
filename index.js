@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const needle = require("needle");
 const tmi = require("tmi.js");
 const LeagueJS = require("leaguejs");
@@ -593,14 +594,13 @@ class TwitchChatLib {
     let msg = chalk.grey(`[${getTimestamp()}] `)
     msg += chalk.hex("6441a5")`[000000000]`
     if (streamerdb){
-      msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
+      msg += chalk.hex(streamerdb.colour)(`| ${channel} |`);
     } else {
       msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} |`);
     }
-    msg += ` | ${username} |`
+    msg += ` ${username} |`
     msg += chalk.red(` Has been banned`)
     console.log(msg)
-    console.log(userstate)
   }
 
   async onCheerHandler(channel, userstate, message) {
