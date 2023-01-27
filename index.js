@@ -18,7 +18,7 @@ class TwitchChatLib {
 
   async onConnectedHandler(addr, port) {
     
-    let message = chalk.grey(`[${getTimestamp()}] `)
+    let message = chalk.grey(`[${moment().format('LLLL')}] `)
     message += chalk.hex("6441a5")(`[000000000] `);
     message += chalk.hex("a970ff")(`| #TWITCH | `);
     message += `Succeeded to connect to ${addr}:${port}`;
@@ -776,7 +776,7 @@ class TwitchChatLib {
     console.log(msg)
     console.log(userstate)
   }
-  
+
 }
 
 class BotClients {
@@ -899,8 +899,9 @@ async function timeoutableMsgCheck(msg, context, target) {
 }
 
 function getTimestamp() {
-  let MomentTimestamp = moment().format('HH:MM:SS').toString()
-  return MomentTimestamp.toString()
+  moment.locale("en-au");
+  let MomentTimestamp = moment().format("LTS")
+  return MomentTimestamp
 }
 
 function GetBitColour(bits) {
