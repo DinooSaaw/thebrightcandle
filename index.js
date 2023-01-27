@@ -1,122 +1,160 @@
-require("dotenv").config(); // Required for handling environment variables
-const needle = require("needle"); // Required for HTTPS requests
-const tmi = require("tmi.js"); // Required for connecting to Twitch's chat service
-const LeagueJS = require("leaguejs"); // Required for League Rank Command
-const chalk = require("chalk"); // Optional for colorizing
-const { MongoClient } = require("mongodb"); // Required for connecting to MongoDB server and performing perform various operations such as CRUD
-const Bot = require("./auth/thebrightcandle.json"); // JSON file for "BOT" client authentication
-const Dino = require("./auth/dinoosaaw.json"); // JSON file for "DINO" client authentication
-const MongoDBclient = new MongoClient(process.env.DATABASEURL); // Create a new MongoClient instance and connect to the MongoDB server using the URL stored in the DATABASEURL environment variable
-const moment = require('moment'); // Required for creating timestamps
+require("dotenv").config();
+const needle = require("needle");
+const tmi = require("tmi.js");
+const LeagueJS = require("leaguejs");
+const chalk = require("chalk");
+const { MongoClient } = require("mongodb");
+const Bot = require("./auth/thebrightcandle.json");
+const Dino = require("./auth/dinoosaaw.json");
+const MongoDBclient = new MongoClient(process.env.DATABASEURL);
+const moment = require('moment');
+const { EmbedBuilder , WebhookClient } = require("discord.js");
+const webhookClient = new WebhookClient({ url: process.env.webhookurl });
 
 let leagueJs = new LeagueJS(process.env.RIOTAPI);
-let CLIENTS = []; // An array to hold the clients
+let CLIENTS = [];
 
 class TwitchChatLib {
-  // Class for handling Twitch events
 
   async onConnectedHandler(addr, port) {
-    // Event handler for "connected" event
+    
     let message = chalk.grey(`[${getTimestamp()}] `)
     message += chalk.hex("6441a5")(`[000000000] `);
     message += chalk.hex("a970ff")(`| #TWITCH | `);
     message += `Succeeded to connect to ${addr}:${port}`;
     console.log(message);
+
+    const online = new EmbedBuilder()
+    .setTitle("Online")
+    .setDescription(`**${Bot.identity.username}** Is Now Online`)
+    .setColor("#82f282")
+    .setTimestamp()
+    .setThumbnail("https://static-cdn.jtvnw.net/jtv_user_pictures/cf9fd0fb-7bbd-4ff1-a678-0f8ba6e33796-profile_image-70x70.png");
+    webhookClient.send({embeds: [online],}).then(
+      message = chalk.grey(`[${getTimestamp()}] `),
+      message += chalk.hex("6441a5")(`[000000000] `),
+      message += chalk.hex("7289da")(`| #DISCORD | `),
+      message += (`Online Webhook successfully sent`),
+      console.log(message)
+    ).catch(err => console.log(err))
   }
 
   async onDisconnectedHandler(reason) {
-    // Event handler for "disconnected" event
     let message = chalk.grey(`[${getTimestamp()}] `)
     message += chalk.hex("6441a5")(`[000000000] `);
     message += chalk.hex("a970ff")(`| #TWITCH | `);
     message += chalk.red.bold(`Disconnected!`);
     message += reason;
     console.log(message);
+
+    const disconnected = new EmbedBuilder()
+    .setTitle("Disconnected")
+    .setDescription(`**${Bot.identity.username}** has disconnected`)
+    .setColor("RED")
+    .setTimestamp()
+    .setThumbnail("https://static-cdn.jtvnw.net/jtv_user_pictures/cf9fd0fb-7bbd-4ff1-a678-0f8ba6e33796-profile_image-70x70.png");
+    webhookClient.send({embeds: [disconnected],}).then(
+      message = chalk.grey(`[${getTimestamp()}] `),
+      message += chalk.hex("6441a5")(`[000000000] `),
+      message += chalk.hex("7289da")(`| #DISCORD | `),
+      message += (`disconnected Webhook successfully sent`),
+      console.log(message)
+    ).catch(err => console.log(err))
   }
 
   async onBotMessageHandler(target, context, message, self) {
-    let msg = message.toLowerCase(); // convert the message to lowercase
+    let msg = message.toLowerCase();
 
-    const botmessageDataBase = await settingsDataBaseQuery({ _id: "botmsgs" }); // get the array of trigger words/phrases
+    const botmessageDataBase = await settingsDataBaseQuery({ _id: "botmsgs" });
     if (botmessageDataBase == null) {
       return console.error("Failed to get botmsg")
     }
-    let check = botmessageDataBase.msg.filter((word) => msg.includes(word)); // check if the message contains any of the trigger words/phrases
+    let check = botmessageDataBase.msg.filter((word) => msg.includes(word));
     if (check.length > 0) {
 
-      if (context.mod) return; // check if the sender is a moderator, if so return
+      if (context.mod) return;
 
-      CLIENTS["SELF"]
-        .ban(
+      CLIENTS["SELF"].ban(
           target,
           context["display-name"],
           `trigger phrase: ${check} || automated by TheBrightCandle`
-        )
-        .catch(err(console.log(err))); // ban the user who sent the message, providing the trigger phrase and the automated source
+        ).catch(err(console.log(err)));
+
+      const bannedmsg = new EmbedBuilder()
+      .setTitle("Banned")
+      .setDescription( `**${context["display-name"]}** has been auto banned in __[${target}](https://twitch.tv/${RemoveHashtag(target)})'s__ channel \n Trigger Phase -> **${check}**`)
+      .setColor("RED")
+      .setTimestamp()
+      webhookClient.send({embeds: [disconnected],}).then(
+        message = chalk.grey(`[${getTimestamp()}] `),
+        message += chalk.hex("6441a5")(`[000000000] `),
+        message += chalk.hex("7289da")(`| #DISCORD | `),
+        message += (`Banned Webhook successfully sent`),
+        console.log(message)
+      ).catch(err => console.log(err))
     }
   }
 
   async onMessageHandler(target, context, message, self) {
     let db = await streamerDataBaseQuery({ _id: RemoveHashtag(target) })
-    let msg = message.toLowerCase(); // Declare twitchat message in lowercase
-    let colour; // Declare a variable to store the color of the user
-    let ID = "000000000"; // Declare an ID variable and set it to a default value
-    let bannableMsg; // bannableMsg variable is used to store a message that has violated community guidelines and may result in a ban for the user. 
-    let timeoutableMsg; // timeoutableMsg variable is used to store a message that has violated community guidelines and may result in a timeout for the user.
+    let msg = message.toLowerCase();
+    let colour;
+    let ID = "000000000";
+    let bannableMsg;
+    let timeoutableMsg;
     
     if (context["customr-reward-id"]) {
-      // Check if a custom reward id is present,
       console.log(`custom reward id is present:`, context["customr-reward-id"]);
     }
 
     switch (context["message-type"]) {
       case "action":
         if (context["user-id"] !== undefined) {
-          ID = context["user-id"]; // Assign the user ID to the ID variable
+          ID = context["user-id"]; 
         }
         let action = chalk.grey(`[${getTimestamp()}] `);
         action += chalk.hex("6441a5")(`[${ID}]`);
         if (db){
-          action += chalk.hex(db.colour)(` | ${target} |`); // Assign a random color code to the target
+          action += chalk.hex(db.colour)(` | ${target} |`);
         } else {
-          action += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${target} |`); // Assign a random color code to the target
+          action += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${target} |`);
         }
         if (RemoveHashtag(target) == context["display-name"].toLowerCase()) {
-          action += chalk.hex("e91916")(` {STREAMER}`); // If the message is from the streamer, add a label
+          action += chalk.hex("e91916")(` {STREAMER}`); 
         }
         if (context.mod) {
-          action += chalk.hex("06af09")(` {MOD}`); // If the message is from a moderator, add a label
+          action += chalk.hex("06af09")(` {MOD}`);
         }
         if (context.vip) {
-          action += chalk.hex("e005b9")(` {VIP}`); // If the message is from a moderator, add a label
+          action += chalk.hex("e005b9")(` {VIP}`);
         }
         if (context.subscriber) {
           if (subscriber > 1) {
-            action += chalk.hex("e006b9")(` {SUB of ${context.badges.subscriber}}`); // If the message is from a subscriber, add a label
+            action += chalk.hex("e006b9")(` {SUB of ${context.badges.subscriber}}`);  
           } else {
-            action += chalk.hex("e006b9")(` {SUB}`); // If the message is from a subscriber, add a label
+            action += chalk.hex("e006b9")(` {SUB}`);  
           }
         }
         if (context.turbo) {
-          action += chalk.hex("59399a")(` {TURBO}`); // If the message is from a turbo user, add a label
+          action += chalk.hex("59399a")(` {TURBO}`);  
         }
         if (context.badges !== null) {
           if (context.badges.premium) {
-            action += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a prime user, add a label
+            action += chalk.hex("01a0d6")(` {PRIME}`); 
           }
           if (context.badges.partner) {
-            action += chalk.hex("9146ff")(` {PARTNER}`); // If the message is from a partner user, add a label
+            action += chalk.hex("9146ff")(` {PARTNER}`);  
           }
           if (context.badges.bits) {
             let bitcolour = GetBitColour(context.badges.bits)
-            action += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`); // If the message is from a bits user, add a label
+            action += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`); 
           }
         }
         colour = context.color;
         if (!colour)
           colour =
             "#" +
-            ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"); // If the color property is not present, assign a random color
+            ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0");  
         action += chalk.hex(colour)(` ${context["display-name"]}`);
         action += chalk.hex(colour)(` || `);
         action += msg;
@@ -124,89 +162,89 @@ class TwitchChatLib {
         break;
       case "chat":
         if (context["user-id"] !== undefined) {
-          ID = context["user-id"]; // Assign the user ID to the ID variable
+          ID = context["user-id"]; 
         }
         let chat = chalk.grey(`[${getTimestamp()}] `);
         chat += chalk.hex("6441a5")(`[${ID}]`);
         if (db){
-          chat += chalk.hex(db.colour)(` | ${target} |`); // Assign a random color code to the target
+          chat += chalk.hex(db.colour)(` | ${target} |`);  
         } else {
-          chat += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${target} |`); // Assign a random color code to the target
+          chat += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${target} |`);  
         }
         if (RemoveHashtag(target) == context["display-name"].toLowerCase()) {
-          chat += chalk.hex("e91916")(` {STREAMER}`); // If the message is from the streamer, add a label
+          chat += chalk.hex("e91916")(` {STREAMER}`); 
         }
         if (context.mod) {
-          chat += chalk.hex("06af09")(` {MOD}`); // If the message is from a moderator, add a label
+          chat += chalk.hex("06af09")(` {MOD}`);
         }
         if (context.vip) {
-          chat += chalk.hex("e005b9")(` {VIP}`); // If the message is from a vip, add a label
+          chat += chalk.hex("e005b9")(` {VIP}`);  
         }
         if (context.subscriber) {
           if (context["badge-info"].subscriber > 1) {
-            chat += chalk.hex("e006b9")(` {SUB of ${context["badge-info"].subscriber}}`); // If the message is from a subscriber, add a label
+            chat += chalk.hex("e006b9")(` {SUB of ${context["badge-info"].subscriber}}`);  
           } else {
-            chat += chalk.hex("e006b9")(` {SUB}`); // If the message is from a subscriber, add a label
+            chat += chalk.hex("e006b9")(` {SUB}`);  
           }
         }
         if (context.turbo) {
-          chat += chalk.hex("59399a")(` {TURBO}`); // If the message is from a turbo user, add a label
+          chat += chalk.hex("59399a")(` {TURBO}`);  
         }
         if (context.badges !== null) {
           if (context.badges.premium) {
-            chat += chalk.hex("01a0d6")(` {PRIME}`); // If the message is from a prime user, add a label
+            chat += chalk.hex("01a0d6")(` {PRIME}`); 
           }
           if (context.badges.partner) {
-            chat += chalk.hex("9146ff")(` {PARTNER}`); // If the message is from a partner user, add a label
+            chat += chalk.hex("9146ff")(` {PARTNER}`);  
           }
           if (context.badges.bits) {
             let bitcolour = GetBitColour(context.badges.bits)
-            chat += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`); // If the message is from a bits user, add a label
+            chat += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`); 
           }
         }
         colour = context.color;
         if (!colour)
           colour =
             "#" +
-            ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"); // If the color property is not present, assign a random color
+            ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0");  
         chat += chalk.hex(colour)(` ${context["display-name"]}`);
         chat += chalk.hex(colour)(` || `);
         chat += msg;
         console.log(chat);
         break;
       case "whisper":
-        let whisper = chalk.grey(`[${getTimestamp()}] `) // Assign the user ID to the ID variable
-        whisper += `[${context["user-id"]}]`; // Assign the user ID to the ID variable
-        whisper += ` {whisper} | ${context["display-name"].toLowerCase()}`; // Add the string '{whisper} | ' and the user's display name (converted to lowercase) to the 'whisper' variable
+        let whisper = chalk.grey(`[${getTimestamp()}] `) 
+        whisper += `[${context["user-id"]}]`; 
+        whisper += ` {whisper} | ${context["display-name"].toLowerCase()}`; 
         whisper += ` || `;
         whisper += msg;
         console.log(whisper);
         break;
-      default: // If the value of 'type' does not match any of the case values, the code in this block will execute
-      // Log the entire 'context' variable to the console
+      default:
+        console.log(context);
       break;
     }
 
-    if (self) return; // Check if the value of the 'self' variable is truthy, if so, return and exit the function
+    if (self) return;
 
     BannableMsgCheck(msg, context, target)
     timeoutableMsgCheck(msg, context, target)
     
     if (msg.startsWith("!")) {
-      // Check if the message starts with an exclamation point
 
-      if (target == Bot.channels[0]) {
-        // Check if the value of the 'target' variable is the same as the second element in the 'Bot.channels' array
-        let args = msg.split(" "); // Split the message into an array of arguments using a space as the separator
-        let commandName = args[0].slice(1); // Get the command name by slicing the Exclamation mark of the 'args'
-        let mentionUser = args[1]; // Get the command name by slicing the Exclamation mark of the 'args'
+
+      if (target == Bot.channels[0] || target == Bot.channels[1]) {
+        
+        let args = msg.split(" "); 
+        let commandName = args[0].slice(1);
+        let mentionUser = args[1];
         let Author = context["display-name"];
 
         let command = await commandDataBaseQuery({ aliases: commandName })
         if(command == null) return console.log("Failed to load command " + commandName)
         
         switch (
-          commandName // Check the value of the 'commandName' variable
+          commandName
         ) {
           case "commands" || "command":
             CLIENTS["BOT"].say(
@@ -419,11 +457,9 @@ class TwitchChatLib {
   }
 
   async onJoinHandler(channel, username, self) {
-     // this function will be executed when a user joins the channel
-    // it gets the settings and streamer database
     let settingsdb = await settingsDataBaseQuery({ _id: "botaccounts"})
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
-    if (self) {  // if the user joining is the bot, log the successful connection
+    if (self) {  
       let msg = chalk.grey(`[${getTimestamp()}] `);
       msg += chalk.hex("6441a5")(`[000000000]`);
       msg += chalk.hex("a970ff")(` | #TWITCH | `);
@@ -437,7 +473,7 @@ class TwitchChatLib {
       }
       console.log(msg);
     }
-    else if (settingsdb.accounts.includes(username)) return // if the user joining is part of accounts dont log
+    else if (settingsdb.accounts.includes(username)) return  
     else {
       let join = chalk.grey(`[${getTimestamp()}] `)
       join += chalk.hex("6441a5")(`[000000000]`);
@@ -451,8 +487,8 @@ class TwitchChatLib {
       console.log(join);
   }
 
-  if ( !streamerdb || streamerdb.welcomeMsg === false) return // if the streamer has the welcome message off, return
-  else { // if the streamer has the welcome message on, check for specific users and send a welcome message
+  if ( !streamerdb || streamerdb.welcomeMsg === false) return  
+  else {  
     switch (username) {
       case "dinoosaaw":
         CLIENTS["BOT"].say(channel, `/me Rawr!`);
@@ -471,11 +507,9 @@ class TwitchChatLib {
   }
 
   async onPartHandler(channel, username, self) {
-        // this function will be executed when a user leaves the channel
-    // it gets the settings and streamer database
     let settingsdb = await settingsDataBaseQuery({ _id: "botaccounts"})
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
-    if (self) { // if the user leaving is the bot, log the successful disconnection
+    if (self) {
       let msg = chalk.grey(`[${getTimestamp()}] `)
       msg += chalk.hex("6441a5")(`[000000000]`);
       msg += chalk.hex("a970ff")(` | #TWITCH | `);
@@ -489,7 +523,7 @@ class TwitchChatLib {
       }
       console.log(msg); 
     }
-    else if (settingsdb.accounts.includes(username)) return // if the user joining is part of accounts dont log
+    else if (settingsdb.accounts.includes(username)) return  
     else {
       let part = chalk.grey(`[${getTimestamp()}] `)
       part += chalk.hex("6441a5")(`[000000000]`);
@@ -506,71 +540,313 @@ class TwitchChatLib {
   }
 
   async onNoticeHandler(channel, msgid, message) {
+
     let notice = `[${getTimestamp()}] `
-    notice += ` [000668423]`
-    notice += ` | ${channel} |`
-    notice += ` | ${msgid} |`
-    notice += message
-    console.log(notice)
+    switch (msgid) {
+      case "already_banned":
+        notice += ` [000226633]`
+        notice += ` | ${channel} |`
+        notice += ` | ${msgid} |`
+        notice += message
+        console.log(notice)
+      default:
+        notice += ` [000668423]`
+        notice += ` | ${channel} |`
+        notice += ` | ${msgid} |`
+        notice += message
+        console.log(notice)
+    }
   }
+
+  async onAnonGiftPaidUpgradeHandler(channel, username, userstate) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    msg += ` | ${username} |`
+    msg += ` is continuing the Gift Sub they got from an anonymous user in channel.`
+    console.log(msg)
+    console.log(userstate)
+  }
+
+  async onGiftPaidUpgradeHandler(channel, username, sender, userstate) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    msg += ` | ${username} |`
+    msg += ` is continuing the Gift Sub they got from ${sender}`
+    console.log(msg)
+    console.log(userstate)
+  }
+
+  async onBanHandler(channel, username, reason, userstate) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    msg += ` | ${username} |`
+    msg += chalk.red(` Has been banned`)
+    console.log(msg)
+    console.log(userstate)
+  }
+
+  async onCheerHandler(channel, userstate, message) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    msg += ` | ${username} |`
+    msg += ` | Cheered: ${userstate.bits} |`
+    msg += message
+    console.log(msg)
+    console.log(userstate)
+  }
+
+  async onClearChatHandler(channel) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    msg += ` Chat was cleared`
+    console.log(msg)
+  }
+  
+  async onFollowerOnlyHandler(channel, enabled, length) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    if (enabled === true) {
+      msg += ` Follower Only has been turned on for user that have been following for ${length}mins`
+    } else {
+      msg += ` Follower Only has been turned off`
+    }
+    console.log(msg)
+  }
+  
+  async onRaidedHandler(channel, username, viewers) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    msg += `${username} `
+    msg += `Has Raided for ${viewer}`
+    console.log(msg)
+  }
+
+  async onResubHandler(channel, username, months, message, userstate, methods){
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let cumulativeMonths = ~~userstate["msg-param-cumulative-months"];
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    msg += `${username} `
+    msg += `Has Resubbed for ${months} ${cumulativeMonths} in a row! using ${methods} | ${message}`
+    console.log(msg)
+    console.log(userstate)
+  }
+
+  async onSlowModeHandler(channel, enabled, length) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    if (enabled === true) {
+      msg += ` Slow Mode has been turned on for user that have been following for ${length}`
+    } else {
+      msg += ` Slow Mode has been turned off`
+    }
+    console.log(msg)
+  }
+
+  async onSubGiftHandler(channel, username, streakMonths, recipient, methods, userstate) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    recipient = ~~userstate["msg-param-recipient-display-name"]
+    let countofgiftsubs = ~~userstate["msg-param-sender-count"]
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    msg += `|${username}| `
+    msg += `Has gifted ${recipient} a sub ${streakMonths} using ${methods} this is they ${countofgiftsubs} gifted sub`
+    console.log(msg)
+    console.log(userstate)
+  }
+  
+  async onSubMysteryGiftHandler(channel, username, numbOfSubs, methods, userstate) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let senderCount = ~~userstate["msg-param-sender-count"];
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    msg += `|${username}| `
+    msg += `Has gifted ${numbOfSubs} using ${methods} this is they ${senderCount} gifted sub`
+    console.log(msg)
+    console.log(userstate)
+  }
+
+  async OnSubscribersHandler(channel, enabled) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    if (enabled === true) {
+      msg += ` subscribers-only has been turned on`
+    } else {
+      msg += ` subscribers-only has been turned off`
+    }
+    console.log(msg)
+  }
+
+  async onSubscriptionHandler(channel, username, method, message, userstate) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    msg += ` | ${username} |`
+    msg += ` | Subscribed using ${method} |`
+    msg += message
+    console.log(msg)
+    console.log(userstate)
+  }
+
+  async onTimeoutHandler(channel, username, reason, duration, userstate) {
+    let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
+    let msg = chalk.grey(`[${getTimestamp()}] `)
+    msg += chalk.hex("6441a5")` [000000000]`
+    if (streamerdb){
+      msg += chalk.hex(streamerdb.colour)(` | ${channel} | `);
+    } else {
+      msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} | `);
+    }
+    msg += ` | ${username} |`
+    msg += ` has been timed out for ${duration} `
+    console.log(msg)
+    console.log(userstate)
+  }
+  
 }
 
 class BotClients {
-  // Class for creating and managing the Twitch clients
 
   async twitchChat() {
     let tl = new TwitchChatLib();
-    CLIENTS["BOT"] = new tmi.client(Bot); // create new "BOT" client with the Bot authentication
-    CLIENTS["DINO"] = new tmi.client(Dino); // create new "DINO" client with the Dino authentication
+    CLIENTS["BOT"] = new tmi.client(Bot);
+    CLIENTS["DINO"] = new tmi.client(Dino);
 
-    CLIENTS["BOT"].on("connected", tl.onConnectedHandler); // assign the "onConnectedHandler" to the "connected" event
-    CLIENTS["DINO"].on("message", tl.onBotMessageHandler); // asasing the "onBotMessageHandler" to the "message" event
-    CLIENTS["BOT"].on("message", tl.onMessageHandler); // asasing the "onMessageHandler" to the "message" event
-    CLIENTS["BOT"].on("join", tl.onJoinHandler); // asasing the "onMessageHandler" to the "message" event
-    CLIENTS["BOT"].on("part", tl.onPartHandler); // asasing the "onMessageHandler" to the "message" event
-    CLIENTS["BOT"].on("notice", tl.onNoticeHandler); // asasing the "onMessageHandler" to the "message" event
+    CLIENTS["BOT"].on("connected", tl.onConnectedHandler);
+    CLIENTS["DINO"].on("message", tl.onBotMessageHandler);
+    CLIENTS["BOT"].on("message", tl.onMessageHandler);
+    CLIENTS["BOT"].on("join", tl.onJoinHandler);
+    CLIENTS["BOT"].on("part", tl.onPartHandler);
+    CLIENTS["BOT"].on("notice", tl.onNoticeHandler);
+    CLIENTS["BOT"].on("anongiftpaidupgrade", tl.onAnonGiftPaidUpgradeHandler);
+    CLIENTS["BOT"].on("giftpaidupgrade", tl.onGiftPaidUpgradeHandler);
+    CLIENTS["BOT"].on("ban", tl.onBanHandler);
+    CLIENTS["BOT"].on("cheer", tl.onCheerHandler);
+    CLIENTS["BOT"].on("clearchat", tl.onClearChatHandler);
+    CLIENTS["BOT"].on("followersonly", tl.onFollowerOnlyHandler);
+    CLIENTS["BOT"].on("raided", tl.onRaidedHandler);
+    CLIENTS["BOT"].on("resub", tl.onResubHandler);
+    CLIENTS["BOT"].on("slowmode", tl.onSlowModeHandler);
+    CLIENTS["BOT"].on("subgift", tl.onSubGiftHandler);
+    CLIENTS["BOT"].on("submysterygift", tl.onSubMysteryGiftHandler);
+    CLIENTS["BOT"].on("subscribers", tl.OnSubscribersHandler);
+    CLIENTS["BOT"].on("subscription", tl.onSubscriptionHandler);
+    CLIENTS["BOT"].on("timeout", tl.onTimeoutHandler);
 
-    CLIENTS["BOT"].connect(); // connect the "BOT" client
-    CLIENTS["DINO"].connect(); // connect the "DINO" client
+    CLIENTS["BOT"].connect();
+    CLIENTS["DINO"].connect();
   }
 }
 
 async function settingsDataBaseQuery(query) {
-    let database = MongoDBclient.db("twitch"); // Select the "twitch" database
-    let settingsDataBase = database.collection("settings"); // Select the "settings" collection
-    let result = await settingsDataBase.findOne(query); // Perform a findOne query on the "settings" collection using the provided query object
-    return result; // Return the result of the query
+    let database = MongoDBclient.db("twitch");
+    let settingsDataBase = database.collection("settings");
+    let result = await settingsDataBase.findOne(query);
+    return result;
 }
 
 async function commandDataBaseQuery(query) {
-  let database = MongoDBclient.db("twitch"); // Select the "twitch" database
-  let settingsDataBase = database.collection("commands"); // Select the "commands" collection
+  let database = MongoDBclient.db("twitch");
+  let settingsDataBase = database.collection("commands");
   let result = await settingsDataBase.findOne(query);
-  return result; // Return the result of the query
+  return result;
 }
 
 async function streamerDataBaseQuery(query) {
-  let database = MongoDBclient.db("twitch"); // Select the "twitch" database
-  let settingsDataBase = database.collection("streamers"); // Select the "streamers" collection
+  let database = MongoDBclient.db("twitch");
+  let settingsDataBase = database.collection("streamers");
   let result = await settingsDataBase.findOne(query);
-  return result; // Return the result of the query
+  return result;
 }
 
 function RemoveHashtag(channel) {
-  let CleanChannelName = channel.replace("#", ""); // Create a variable to store the cleaned channel name
-  return CleanChannelName; // Return the cleaned channel name
+  let CleanChannelName = channel.replace("#", "");
+  return CleanChannelName;
 }
 
 async function GetRank() {
   await leagueJs.League.gettingLeagueEntriesForSummonerId(
-    // This function uses the leagueJs library to get the rank of a summoner based on their summoner ID and region
     process.env.RIOTSUMMONERID,
     process.env.RIOTREGION
   ).then((data) => {
     "use strict";
-    if ((data = null)) return (Rank = "Unranked"); // If data is null, the summoner is unranked
+    if ((data = null)) return (Rank = "Unranked");
     console.log(data);
-    return `Solo/Duo: ${data[0].tier} ${data[0].rank} at ${data[0].leaguePoints} LP. Flex: ${data[1].tier} ${data[1].rank} at ${data[1].leaguePoints}LP `; // Return a string that displays the summoner's solo/duo and flex rank, as well as their LP
+    return `Solo/Duo: ${data[0].tier} ${data[0].rank} at ${data[0].leaguePoints} LP. Flex: ${data[1].tier} ${data[1].rank} at ${data[1].leaguePoints}LP `;
   });
 }
 
@@ -579,10 +855,8 @@ function ReadGame(target) {
     "get",
     `https://decapi.me/twitch/game/${RemoveHashtag(target)}`,
     function (error, response) {
-      // This function uses the needle library to make a GET request to the decapi.me Twitch API
       if (!error && response.statusCode == 200)
-        // Check for errors and a successful status code
-        CLIENTS["BOT"].say(target, `The game is: ${response.body}!`); // Use the say method from the CLIENTS object to send a message to the target channel
+        CLIENTS["BOT"].say(target, `The game is: ${response.body}!`);
     }
   );
 }
@@ -599,34 +873,34 @@ function ReadTitle(target) {
 }
 
 async function BannableMsgCheck(msg, context, target) {
-  const botmessageDataBase = await settingsDataBaseQuery({ _id: "bannedmsgs" }); // get the array of trigger words/phrases
+  const botmessageDataBase = await settingsDataBaseQuery({ _id: "bannedmsgs" });
   if (botmessageDataBase == null) {
     return console.error("Failed to get bannedmsgs")
   }
-  let check = botmessageDataBase.msg.filter((word) => msg.includes(word)); // check if the message contains any of the trigger words/phrases
+  let check = botmessageDataBase.msg.filter((word) => msg.includes(word));
   if (check.length > 0) {
 
-    if (context.mod) return; // check if the sender is a moderator, if so return
+    if (context.mod) return;
     CLIENTS["SELF"].ban(target, context["display-name"], `${context["display-name"]} has spoken the words that shall never been spoken | automated by TheBrightCandle`)
   }
 }
 
 async function timeoutableMsgCheck(msg, context, target) {
-  const botmessageDataBase = await settingsDataBaseQuery({ _id: "timeoutmsg" }); // get the array of trigger words/phrases
+  const botmessageDataBase = await settingsDataBaseQuery({ _id: "timeoutmsg" });
   if (botmessageDataBase == null) {
     return console.error("Failed to get bannedmsgs")
   }
-  let check = botmessageDataBase.msg.filter((word) => msg.includes(word)); // check if the message contains any of the trigger words/phrases
+  let check = botmessageDataBase.msg.filter((word) => msg.includes(word));
   if (check.length > 0) {
     
-    if (context.mod) return; // check if the sender is a moderator, if so return
+    if (context.mod) return;
     CLIENTS["SELF"].timeout(target, context["display-name"], 315, `${context["display-name"]} has spoken the words that shall never been spoken | automated by TheBrightCandle`)
   }
 }
 
 function getTimestamp() {
-  let MomentTimestamp = moment().format('HH:MM:SS').toString()  // This function uses the moment.js library to get the current timestamp
-  return MomentTimestamp.toString() // Return the timestamp as a string
+  let MomentTimestamp = moment().format('HH:MM:SS').toString()
+  return MomentTimestamp.toString()
 }
 
 function GetBitColour(bits) {
@@ -650,5 +924,5 @@ function GetBitColour(bits) {
   if (bits >= "1") return "ccc9d0";
 }
 
-let botclients = new BotClients(); // create a new instance of BotClients
-botclients.twitchChat(); // call the twitchChat method.
+let botclients = new BotClients();
+botclients.twitchChat();
