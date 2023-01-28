@@ -20,7 +20,7 @@ class TwitchChatLib {
   async onConnectedHandler(addr, port) {
     
     let message = chalk.grey(`[${moment().format('LLLL')}] `)
-    message += chalk.hex("6441a5")(`[000000000] `);
+    message += chalk.hex("6441a5")(`[~~~~~~~~~] `);
     message += chalk.hex("a970ff")(`| #TWITCH | `);
     message += `Succeeded to connect to ${addr}:${port}`;
     console.log(message);
@@ -33,7 +33,7 @@ class TwitchChatLib {
     .setThumbnail("https://static-cdn.jtvnw.net/jtv_user_pictures/cf9fd0fb-7bbd-4ff1-a678-0f8ba6e33796-profile_image-70x70.png");
     webhookClient.send({embeds: [online],}).then(
       message = chalk.grey(`[${getTimestamp()}] `),
-      message += chalk.hex("6441a5")(`[000000000] `),
+      message += chalk.hex("6441a5")(`[~~~~~~~~~] `),
       message += chalk.hex("7289da")(`| #DISCORD | `),
       message += (`Online Webhook successfully sent`),
       console.log(message)
@@ -41,8 +41,8 @@ class TwitchChatLib {
   }
 
   async onDisconnectedHandler(reason) {
-    let message = chalk.grey(`[${getTimestamp()}] `)
-    message += chalk.hex("6441a5")(`[000000000] `);
+    let message = chalk.grey(`[${moment().format('LLLL')}] `)
+    message += chalk.hex("6441a5")(`[~~~~~~~~~] `);
     message += chalk.hex("a970ff")(`| #TWITCH | `);
     message += chalk.red.bold(`Disconnected!`);
     message += reason;
@@ -56,7 +56,7 @@ class TwitchChatLib {
     .setThumbnail("https://static-cdn.jtvnw.net/jtv_user_pictures/cf9fd0fb-7bbd-4ff1-a678-0f8ba6e33796-profile_image-70x70.png");
     webhookClient.send({embeds: [disconnected],}).then(
       message = chalk.grey(`[${getTimestamp()}] `),
-      message += chalk.hex("6441a5")(`[000000000] `),
+      message += chalk.hex("6441a5")(`[~~~~~~~~~] `),
       message += chalk.hex("7289da")(`| #DISCORD | `),
       message += (`disconnected Webhook successfully sent`),
       console.log(message)
@@ -88,7 +88,7 @@ class TwitchChatLib {
       .setTimestamp()
       webhookClient.send({embeds: [disconnected],}).then(
         message = chalk.grey(`[${getTimestamp()}] `),
-        message += chalk.hex("6441a5")(`[000000000] `),
+        message += chalk.hex("6441a5")(`[~~~~~~~~~] `),
         message += chalk.hex("7289da")(`| #DISCORD | `),
         message += (`Banned Webhook successfully sent`),
         console.log(message)
@@ -462,7 +462,7 @@ class TwitchChatLib {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     if (self) {  
       let msg = chalk.grey(`[${getTimestamp()}] `);
-      msg += chalk.hex("6441a5")(`[000000000]`);
+      msg += chalk.hex("6441a5")(`[~~~~~~~~~]`);
       msg += chalk.hex("a970ff")(` | #TWITCH | `);
       msg += `Successfully connected to: `;
       if (streamerdb){
@@ -477,7 +477,7 @@ class TwitchChatLib {
     else if (settingsdb.accounts.includes(username)) return  
     else {
       let join = chalk.grey(`[${getTimestamp()}] `)
-      join += chalk.hex("6441a5")(`[000000000]`);
+      join += chalk.hex("6441a5")(`[~~~~~~~~~]`);
       if (streamerdb){
         join += chalk.hex(streamerdb.colour)(` | ${channel} |`);
       } else {
@@ -512,7 +512,7 @@ class TwitchChatLib {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     if (self) {
       let msg = chalk.grey(`[${getTimestamp()}] `)
-      msg += chalk.hex("6441a5")(`[000000000]`);
+      msg += chalk.hex("6441a5")(`[~~~~~~~~~]`);
       msg += chalk.hex("a970ff")(` | #TWITCH | `);
       msg += `Disconnected from: `;
       if (streamerdb){
@@ -527,7 +527,7 @@ class TwitchChatLib {
     else if (settingsdb.accounts.includes(username)) return  
     else {
       let part = chalk.grey(`[${getTimestamp()}] `)
-      part += chalk.hex("6441a5")(`[000000000]`);
+      part += chalk.hex("6441a5")(`[~~~~~~~~~]`);
       if (streamerdb){
         part += chalk.hex(streamerdb.colour)(` | ${channel} |`);
       } else {
@@ -547,13 +547,13 @@ class TwitchChatLib {
       case "already_banned":
         notice += ` [000226633]`
         notice += ` | ${channel} |`
-        notice += ` | ${msgid} |`
+        notice += ` ${msgid} |`
         notice += message
         console.log(notice)
       default:
         notice += ` [000668423]`
         notice += ` | ${channel} |`
-        notice += ` | ${msgid} |`
+        notice += ` ${msgid} |`
         notice += message
         console.log(notice)
     }
@@ -562,13 +562,13 @@ class TwitchChatLib {
   async onAnonGiftPaidUpgradeHandler(channel, username, userstate) {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
       msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} |`);
     }
-    msg += ` | ${username} |`
+    msg += ` ${username} |`
     msg += ` is continuing the Gift Sub they got from an anonymous user in channel.`
     console.log(msg)
     console.log(userstate)
@@ -577,13 +577,13 @@ class TwitchChatLib {
   async onGiftPaidUpgradeHandler(channel, username, sender, userstate) {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
       msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} |`);
     }
-    msg += ` | ${username} |`
+    msg += ` ${username} |`
     msg += ` is continuing the Gift Sub they got from ${sender}`
     console.log(msg)
     console.log(userstate)
@@ -592,7 +592,7 @@ class TwitchChatLib {
   async onBanHandler(channel, username, reason, userstate) {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(`| ${channel} |`);
     } else {
@@ -606,14 +606,14 @@ class TwitchChatLib {
   async onCheerHandler(channel, userstate, message) {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
       msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} |`);
     }
-    msg += ` | ${username} |`
-    msg += ` | Cheered: ${userstate.bits} |`
+    msg += ` ${username} |`
+    msg += ` Cheered: ${userstate.bits} |`
     msg += message
     console.log(msg)
     console.log(userstate)
@@ -622,7 +622,7 @@ class TwitchChatLib {
   async onClearChatHandler(channel) {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
@@ -635,7 +635,7 @@ class TwitchChatLib {
   async onFollowerOnlyHandler(channel, enabled, length) {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
@@ -652,14 +652,14 @@ class TwitchChatLib {
   async onRaidedHandler(channel, username, viewers) {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
       msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} |`);
     }
     msg += `${username} `
-    msg += `Has Raided for ${viewer}`
+    msg += `Has Raided for ${viewers}`
     console.log(msg)
   }
 
@@ -667,7 +667,7 @@ class TwitchChatLib {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let cumulativeMonths = ~~userstate["msg-param-cumulative-months"];
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
@@ -682,7 +682,7 @@ class TwitchChatLib {
   async onSlowModeHandler(channel, enabled, length) {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
@@ -701,13 +701,13 @@ class TwitchChatLib {
     recipient = ~~userstate["msg-param-recipient-display-name"]
     let countofgiftsubs = ~~userstate["msg-param-sender-count"]
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
       msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} |`);
     }
-    msg += `|${username}| `
+    msg += ` ${username} | `
     msg += `Has gifted ${recipient} a sub ${streakMonths} using ${methods} this is they ${countofgiftsubs} gifted sub`
     console.log(msg)
     console.log(userstate)
@@ -717,13 +717,13 @@ class TwitchChatLib {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let senderCount = ~~userstate["msg-param-sender-count"];
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
       msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} |`);
     }
-    msg += `|${username}| `
+    msg += ` ${username} | `
     msg += `Has gifted ${numbOfSubs} using ${methods} this is they ${senderCount} gifted sub`
     console.log(msg)
     console.log(userstate)
@@ -732,7 +732,7 @@ class TwitchChatLib {
   async OnSubscribersHandler(channel, enabled) {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
@@ -749,14 +749,14 @@ class TwitchChatLib {
   async onSubscriptionHandler(channel, username, method, message, userstate) {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
       msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} |`);
     }
-    msg += ` | ${username} |`
-    msg += ` | Subscribed using ${method} |`
+    msg += ` ${username} |`
+    msg += ` Subscribed using ${method} |`
     msg += message
     console.log(msg)
     console.log(userstate)
@@ -765,13 +765,13 @@ class TwitchChatLib {
   async onTimeoutHandler(channel, username, reason, duration, userstate) {
     let streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) })
     let msg = chalk.grey(`[${getTimestamp()}] `)
-    msg += chalk.hex("6441a5")`[000000000]`
+    msg += chalk.hex("6441a5")`[~~~~~~~~~]`
     if (streamerdb){
       msg += chalk.hex(streamerdb.colour)(` | ${channel} |`);
     } else {
       msg += chalk.hex("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))(` | ${channel} |`);
     }
-    msg += ` | ${username} |`
+    msg += ` ${username} |`
     msg += ` has been timed out for ${duration} `
     console.log(msg)
     console.log(userstate)
