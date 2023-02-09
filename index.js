@@ -26,22 +26,22 @@ class TwitchChatLib {
 
     const online = new EmbedBuilder()
       .setTitle("Online")
-      .setDescription(`**${Bot.identity.username}** Is Now Online`)
+      .setDescription(`**${Bot.identity.username}** Is Now Online!`)
       .setColor("#82f282")
       .setTimestamp()
       .setThumbnail(
         "https://static-cdn.jtvnw.net/jtv_user_pictures/cf9fd0fb-7bbd-4ff1-a678-0f8ba6e33796-profile_image-70x70.png"
       );
-    // webhookClient
-    //   .send({ embeds: [online] })
-    //   .then(
-    //     (message = chalk.grey(`[${getTimestamp()}] `)),
-    //     (message += chalk.hex("6441a5")(`[~~~~~~~~~] `)),
-    //     (message += chalk.hex("7289da")(`| #DISCORD | `)),
-    //     (message += `Online Webhook successfully sent`),
-    //     console.log(message)
-    //   )
-    //   .catch((err) => console.log(err));
+    webhookClient
+      .send({ embeds: [online] })
+      .then(
+        (message = chalk.grey(`[${getTimestamp()}] `)),
+        (message += chalk.hex("6441a5")(`[~~~~~~~~~] `)),
+        (message += chalk.hex("7289da")(`| #DISCORD | `)),
+        (message += `Online Webhook successfully sent`),
+        console.log(message)
+      )
+      .catch((err) => console.log(err));
   }
 
   async onDisconnectedHandler(reason) {
