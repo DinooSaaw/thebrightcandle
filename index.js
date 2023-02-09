@@ -14,6 +14,7 @@ const webhookClient = new WebhookClient({ url: process.env.webhookurl });
 
 let leagueJs = new LeagueJS(process.env.RIOTAPI);
 let CLIENTS = [];
+let steamer = []
 
 class TwitchChatLib {
   async onConnectedHandler(addr, port) {
@@ -31,16 +32,16 @@ class TwitchChatLib {
       .setThumbnail(
         "https://static-cdn.jtvnw.net/jtv_user_pictures/cf9fd0fb-7bbd-4ff1-a678-0f8ba6e33796-profile_image-70x70.png"
       );
-    webhookClient
-      .send({ embeds: [online] })
-      .then(
-        (message = chalk.grey(`[${getTimestamp()}] `)),
-        (message += chalk.hex("6441a5")(`[~~~~~~~~~] `)),
-        (message += chalk.hex("7289da")(`| #DISCORD | `)),
-        (message += `Online Webhook successfully sent`),
-        console.log(message)
-      )
-      .catch((err) => console.log(err));
+    // webhookClient
+    //   .send({ embeds: [online] })
+    //   .then(
+    //     (message = chalk.grey(`[${getTimestamp()}] `)),
+    //     (message += chalk.hex("6441a5")(`[~~~~~~~~~] `)),
+    //     (message += chalk.hex("7289da")(`| #DISCORD | `)),
+    //     (message += `Online Webhook successfully sent`),
+    //     console.log(message)
+    //   )
+    //   .catch((err) => console.log(err));
   }
 
   async onDisconnectedHandler(reason) {
@@ -120,18 +121,19 @@ class TwitchChatLib {
     let colour;
     let ID = "000000000";
     let bannableMsg;
+    let action;
     let timeoutableMsg;
 
     if (context["custom-reward-id"]) {
       console.log(`custom reward id is present:`, context["custom-reward-id"]);
     }
-
+    // console.log(context);
     switch (context["message-type"]) {
       case "action":
         if (context["user-id"] !== undefined) {
           ID = context["user-id"];
         }
-        let action = chalk.grey(`[${getTimestamp()}] `);
+        action = chalk.grey(`[${getTimestamp()}] `);
         action += chalk.hex("6441a5")(`[${ID}]`);
         if (db) {
           action += chalk.hex(db.colour)(` | ${target} |`);
@@ -151,7 +153,7 @@ class TwitchChatLib {
           action += chalk.hex("e005b9")(` {VIP}`);
         }
         if (context.subscriber) {
-          if (subscriber > 1) {
+          if (context.badges.subscriber > 1) {
             action += chalk.hex("e006b9")(
               ` {SUB of ${context.badges.subscriber}}`
             );
@@ -185,6 +187,61 @@ class TwitchChatLib {
         console.log(action);
         break;
       case "chat":
+        if (context["user-id"] !== undefined) {
+          ID = context["user-id"];
+        }
+        action = chalk.grey(`[${getTimestamp()}] `);
+        action += chalk.hex("6441a5")(`[${ID}]`);
+        if (db) {
+          action += chalk.hex(db.colour)(` | ${target} |`);
+        } else {
+          action += chalk.hex(
+            "#" +
+              ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
+          )(` | ${target} |`);
+        }
+        if (RemoveHashtag(target) == context["display-name"].toLowerCase()) {
+          action += chalk.hex("e91916")(` {STREAMER}`);
+        }
+        if (context.mod) {
+          action += chalk.hex("06af09")(` {MOD}`);
+        }
+        if (context.vip) {
+          action += chalk.hex("e005b9")(` {VIP}`);
+        }
+        if (context.subscriber) {
+          if (context.badges.subscriber > 1) {
+            action += chalk.hex("e006b9")(
+              ` {SUB of ${context.badges.subscriber}}`
+            );
+          } else {
+            action += chalk.hex("e006b9")(` {SUB}`);
+          }
+        }
+        if (context.turbo) {
+          action += chalk.hex("59399a")(` {TURBO}`);
+        }
+        if (context.badges !== null) {
+          if (context.badges.premium) {
+            action += chalk.hex("01a0d6")(` {PRIME}`);
+          }
+          if (context.badges.partner) {
+            action += chalk.hex("9146ff")(` {PARTNER}`);
+          }
+          if (context.badges.bits) {
+            let bitcolour = GetBitColour(context.badges.bits);
+            action += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`);
+          }
+        }
+        colour = context.color;
+        if (!colour)
+          colour =
+            "#" +
+            ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0");
+        action += chalk.hex(colour)(` ${context["display-name"]}`);
+        action += chalk.hex(colour)(` || `);
+        action += msg;
+        console.log(action);
         break;
       case "whisper":
         let whisper = chalk.grey(`[${getTimestamp()}] `);
@@ -787,7 +844,7 @@ class TwitchChatLib {
       msg += chalk.hex("e005b9")(` {VIP}`);
     }
     if (userstate.subscriber) {
-      if (userstate["badge-info"].subscriber > 1) {
+      if (userstate["badge-info"].context.badges.subscriber > 1) {
         msg += chalk.hex("e006b9")(
           ` {SUB of ${userstate["badge-info"].subscriber}}`
         );
@@ -992,5 +1049,77 @@ function GetBitColour(bits) {
   if (bits >= "1") return "ccc9d0";
 }
 
+function live(streamerName) {
+
+  const options = {
+    headers: {
+      "Client-ID": Dino.identity.clientID,
+      Authorization: "Bearer " + Dino.identity.twitchpassword
+    }
+  };
+
+  needle.get(`https://api.twitch.tv/helix/streams?user_login=${streamerName}`, options, (err, res) => {
+  if (err) {
+    console.error(err);
+  } else {
+    if (!res.body.data) return false
+    if (res.body.data.length == 0) {
+      if(steamer.includes(streamerName)) {
+        const index = steamer.indexOf(streamerName);
+        if (index !== -1) {
+          steamer.splice(index, 1);
+        }
+      }
+      return false
+    }
+    if (steamer.includes(res.body.data[0].user_login)) return true
+    else if (res.body.data) {
+      steamer.push(res.body.data[0].user_login)
+      return true
+    }
+  }
+});
+}
+
+async function LiveCheck() {
+  setTimeout(() => {
+    setInterval(async () => {
+      Dino.channels.forEach(name => {
+        live(RemoveHashtag(name))
+      });
+      if (steamer.length) {
+        const streamers = await Promise.all(
+          steamer.map(async channel => {
+            const streamerdb = await streamerDataBaseQuery({ _id: RemoveHashtag(channel) });
+            if (streamerdb) {
+              return {
+                name: channel,
+                color: streamerdb.colour
+              };
+            } else {
+              return {
+                name: channel,
+                color: "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
+              };
+            }
+          })
+        );
+
+        let msg = chalk.grey(`[${getTimestamp()}] `);
+        msg += chalk.hex("6441a5")(`[~~~~~~~~~]`);
+        msg += chalk.hex("a970ff")(` | LIVE |`);
+
+        streamers.forEach(streamer => {
+          msg += chalk.hex(streamer.color)(` ${streamer.name} `);
+        });
+
+        msg += streamers.length === 1 ? "Is currently live" : "Are currently live";
+        console.log(msg);
+      }
+    }, 5 * 60 * 1000);
+  }, 30 * 1000);
+}
+
 let botclients = new BotClients();
 botclients.twitchChat();
+LiveCheck();
