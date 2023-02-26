@@ -11,7 +11,6 @@ const MongoDBclient = new MongoClient(process.env.DATABASEURL);
 const moment = require("moment");
 const { EmbedBuilder, WebhookClient } = require("discord.js");
 const webhookClient = new WebhookClient({ url: process.env.webhookurl });
-
 let leagueJs = new LeagueJS(process.env.RIOTAPI);
 let CLIENTS = [];
 let steamer = []
@@ -712,7 +711,6 @@ class TwitchChatLib {
     let streamerdb = await streamerDataBaseQuery({
       _id: RemoveHashtag(channel),
     });
-    let cumulativeMonths = ~~userstate["msg-param-cumulative-months"];
     let msg = chalk.grey(`[${getTimestamp()}] `);
     msg += chalk.hex("6441a5")`[~~~~~~~~~]`;
     if (streamerdb) {
@@ -722,10 +720,44 @@ class TwitchChatLib {
         "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
       )(` | ${channel} |`);
     }
-    msg += `${username} `;
-    msg += `Has Resubbed for ${months} ${cumulativeMonths} in a row! using ${methods} | ${message}`;
+    if (userstate.mod) {
+      msg += chalk.hex("06af09")(` {MOD}`);
+    }
+    if (userstate.vip) {
+      msg += chalk.hex("e005b9")(` {VIP}`);
+    }
+    if (userstate.subscriber) {
+      if (userstate["badge-info"].context.badges.subscriber > 1) {
+        msg += chalk.hex("e006b9")(
+          ` {SUB of ${userstate["badge-info"].subscriber}}`
+        );
+      } else {
+        msg += chalk.hex("e006b9")(` {SUB}`);
+      }
+    }
+    if (userstate.turbo) {
+      msg += chalk.hex("59399a")(` {TURBO}`);
+    }
+    if (userstate.badges !== null) {
+      if (userstate.badges.premium) {
+        msg += chalk.hex("01a0d6")(` {PRIME}`);
+      }
+      if (userstate.badges.partner) {
+        msg += chalk.hex("9146ff")(` {PARTNER}`);
+      }
+      if (userstate.badges.bits) {
+        let bitcolour = GetBitColour(context.badges.bits);
+        msg += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`);
+      }
+      colour = userstate.color;
+      if (!colour)
+        colour =
+          "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0");
+      chat += chalk.hex(colour)(` ${username}`);
+    }
+    msg += ` Has Resubbed for ${months} months, currently on a ${cumulativeMonths} month streak! using ${userstate["msg-param-sub-plan"]} |`;
+    msg += message;
     console.log(msg);
-    console.log(userstate);
   }
 
   async onSlowModeHandler(channel, enabled, length) {
@@ -1116,7 +1148,7 @@ async function LiveCheck() {
         msg += streamers.length === 1 ? "Is currently live" : "Are currently live";
         console.log(msg);
       }
-    }, 5 * 60 * 1000);
+    }, 60 * 1000 * 5);
   }, 30 * 1000);
 }
 
