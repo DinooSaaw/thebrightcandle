@@ -261,7 +261,7 @@ class TwitchChatLib {
     timeoutableMsgCheck(msg, context, target);
 
     if (msg.startsWith("!")) {
-      if (target == Bot.channels[0] || target == Bot.channels[5]) {
+      if (target == Bot.channels[4] || target == Bot.channels[5]) {
         let args = msg.split(" ");
         let commandName = args[0].slice(1);
         let mentionUser = args[1];
@@ -280,7 +280,7 @@ class TwitchChatLib {
               if (err) throw err;
               let names = "";
               // iterate through each element of the array and add the value name to a string
-              result.forEach(function(doc, index) {
+              result.sort().forEach(function(doc, index) {
                 names += doc.name;
                 if (index !== result.length - 1) {
                   names += ", ";
@@ -460,7 +460,7 @@ class TwitchChatLib {
           case "english":
             CLIENTS["BOT"].say(
               target,
-              `This is a english stream please refrain from speaking a differnt langThis is a english stream please refrain from speaking a different language`
+              command.data
             );
             break;
 
