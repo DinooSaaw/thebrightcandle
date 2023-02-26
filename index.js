@@ -261,7 +261,7 @@ class TwitchChatLib {
     timeoutableMsgCheck(msg, context, target);
 
     if (msg.startsWith("!")) {
-      if (target == Bot.channels[0] || target == Bot.channels[1]) {
+      if (target == Bot.channels[0] || target == Bot.channels[5]) {
         let args = msg.split(" ");
         let commandName = args[0].slice(1);
         let mentionUser = args[1];
@@ -273,10 +273,24 @@ class TwitchChatLib {
 
         switch (commandName) {
           case "commands" || "command":
-            CLIENTS["BOT"].say(
-              target,
-              `This channel has access to the following commands: `
-            );
+            let names = ""
+            let database = MongoDBclient.db("twitch");
+            let settingsDataBase = database.collection("commands");
+            let result = await settingsDataBase.find().toArray(function(err, result) {
+              if (err) throw err;
+              let names = "";
+              // iterate through each element of the array and add the value name to a string
+              result.forEach(function(doc, index) {
+                names += doc.name;
+                if (index !== result.length - 1) {
+                  names += ", ";
+                }
+              });
+              CLIENTS["BOT"].say(
+                target,
+                `This channel has access to the following commands: ${names}`
+                );
+            })
             break;
 
           case "uptime":
