@@ -126,7 +126,10 @@ class TwitchChatLib {
     if (context["custom-reward-id"]) {
       console.log(`custom reward id is present:`, context["custom-reward-id"]);
     }
-    // console.log(context);
+    if (context.badges !== null) {
+      // console.log(context.badges);
+    }
+
     switch (context["message-type"]) {
       case "action":
         if (context["user-id"] !== undefined) {
@@ -173,6 +176,9 @@ class TwitchChatLib {
           if (context.badges.bits) {
             let bitcolour = GetBitColour(context.badges.bits);
             action += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`);
+          }
+          if (context.badges["artist-badge"]) {
+            action += chalk.hex("1e69ff")(` {ARTIST}`);
           }
         }
         colour = context.color;
@@ -230,6 +236,9 @@ class TwitchChatLib {
           if (context.badges.bits) {
             let bitcolour = GetBitColour(context.badges.bits);
             action += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`);
+          }
+          if (context.badges["artist-badge"]) {
+            action += chalk.hex("1e69ff")(` {ARTIST}`);
           }
         }
         colour = context.color;
@@ -658,7 +667,7 @@ class TwitchChatLib {
         "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0")
       )(` | ${channel} |`);
     }
-    msg += ` ${username} |`;
+    msg += ` ${userstate.username} |`;
     msg += ` Cheered: ${userstate.bits} |`;
     msg += message;
     console.log(msg);
@@ -722,6 +731,7 @@ class TwitchChatLib {
   }
 
   async onResubHandler(channel, username, months, message, userstate, methods) {
+    let cumulativeMonths = ~~userstate["msg-param-cumulative-months"];
     let streamerdb = await streamerDataBaseQuery({
       _id: RemoveHashtag(channel),
     });
@@ -741,7 +751,7 @@ class TwitchChatLib {
       msg += chalk.hex("e005b9")(` {VIP}`);
     }
     if (userstate.subscriber) {
-      if (userstate["badge-info"].context.badges.subscriber > 1) {
+      if (userstate.badges.subscriber > 1) {
         msg += chalk.hex("e006b9")(
           ` {SUB of ${userstate["badge-info"].subscriber}}`
         );
@@ -763,11 +773,11 @@ class TwitchChatLib {
         let bitcolour = GetBitColour(context.badges.bits);
         msg += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`);
       }
-      colour = userstate.color;
+      let colour = userstate.color;
       if (!colour)
         colour =
           "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0");
-      chat += chalk.hex(colour)(` ${username}`);
+        msg += chalk.hex(colour)(` ${username}`);
     }
     msg += ` Has Resubbed for ${months} months, currently on a ${cumulativeMonths} month streak! using ${userstate["msg-param-sub-plan"]} |`;
     msg += message;
@@ -818,9 +828,8 @@ class TwitchChatLib {
       )(` | ${channel} |`);
     }
     msg += ` ${username} | `;
-    msg += `Has gifted ${recipient} a sub ${streakMonths} using ${methods} this is they ${countofgiftsubs} gifted sub`;
+    msg += `Has gifted ${userstate["msg-param-recipient-user-name"]} a sub!`;
     console.log(msg);
-    console.log(userstate);
   }
 
   async onSubMysteryGiftHandler(
@@ -890,7 +899,7 @@ class TwitchChatLib {
       msg += chalk.hex("e005b9")(` {VIP}`);
     }
     if (userstate.subscriber) {
-      if (userstate["badge-info"].context.badges.subscriber > 1) {
+      if (userstate.badges.subscriber > 1) {
         msg += chalk.hex("e006b9")(
           ` {SUB of ${userstate["badge-info"].subscriber}}`
         );
@@ -912,11 +921,11 @@ class TwitchChatLib {
         let bitcolour = GetBitColour(context.badges.bits);
         msg += chalk.hex(bitcolour)(` {BITS: ${context.badges.bits}}`);
       }
-      colour = userstate.color;
+      let colour = userstate.color;
       if (!colour)
         colour =
           "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0");
-      chat += chalk.hex(colour)(` ${username}`);
+      msg += chalk.hex(colour)(` ${username}`);
     }
     msg += ` Subscribed using ${userstate["msg-param-sub-plan"]} ||`;
     msg += message;
@@ -937,9 +946,8 @@ class TwitchChatLib {
       )(` | ${channel} |`);
     }
     msg += ` ${username} |`;
-    msg += ` has been timed out for ${duration} `;
+    msg += ` has been timed out for ${duration} seconds.`;
     console.log(msg);
-    console.log(userstate);
   }
 }
 
@@ -1164,6 +1172,10 @@ async function LiveCheck() {
       }
     }, 60 * 1000 * 5);
   }, 30 * 1000);
+}
+
+function isNotEnglish(str) {
+  return /[^\u0000-\u007F]+/.test(str);
 }
 
 let botclients = new BotClients();
