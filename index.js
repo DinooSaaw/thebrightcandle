@@ -82,13 +82,7 @@ class TwitchChatLib {
     if (check.length > 0) {
       if (context.mod) return;
 
-      CLIENTS["SELF"]
-        .ban(
-          target,
-          context["display-name"],
-          `trigger phrase: ${check} || automated by TheBrightCandle`
-        )
-        .catch(err(console.log(err)));
+      CLIENTS["SELF"].ban(target, context["display-name"], `trigger phrase: ${check} || automated by TheBrightCandle`).catch(err(console.log(err)));
 
       const bannedmsg = new EmbedBuilder()
         .setTitle("Banned")
@@ -476,6 +470,15 @@ class TwitchChatLib {
           case "drops":
             CLIENTS["BOT"].say(target, command.data);
             break;
+
+          case "raid":
+            CLIENTS["BOT"].say(target, command.data);
+            break;
+          
+          default:
+            CLIENTS["BOT"].say(target, command.data);
+            break;
+
         }
       }
     }
@@ -516,6 +519,8 @@ class TwitchChatLib {
     }
 
     if (channel == "#slipsaus" && username == "slipsaus")
+      return CLIENTS["DINO"].say(channel, "!dino");
+    if (channel == "#apollopepsi" && username == "apollopepsi")
       return CLIENTS["DINO"].say(channel, "!dino");
     if (!streamerdb || streamerdb.welcomeMsg === false) return;
     else {
