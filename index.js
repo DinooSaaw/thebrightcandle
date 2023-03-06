@@ -5,9 +5,9 @@ const tmi = require("tmi.js");
 const LeagueJS = require("leaguejs");
 const chalk = require("chalk");
 const { MongoClient } = require("mongodb");
+const MongoDBclient = new MongoClient(process.env.DATABASEURL);
 const Bot = require("./auth/thebrightcandle.json");
 const Dino = require("./auth/dinoosaaw.json");
-const MongoDBclient = new MongoClient(process.env.DATABASEURL);
 const moment = require("moment");
 const { EmbedBuilder, WebhookClient } = require("discord.js");
 const webhookClient = new WebhookClient({ url: process.env.webhookurl });
@@ -31,16 +31,16 @@ class TwitchChatLib {
       .setThumbnail(
         "https://static-cdn.jtvnw.net/jtv_user_pictures/cf9fd0fb-7bbd-4ff1-a678-0f8ba6e33796-profile_image-70x70.png"
       );
-    webhookClient
-      .send({ embeds: [online] })
-      .then(
+    // webhookClient
+      // .send({ embeds: [online] })
+      // .then(
         (message = chalk.grey(`[${getTimestamp()}] `)),
         (message += chalk.hex("6441a5")(`[~~~~~~~~~] `)),
         (message += chalk.hex("7289da")(`| #DISCORD | `)),
         (message += `Online Webhook successfully sent`),
         console.log(message)
-      )
-      .catch((err) => console.log(err));
+      // )
+      // .catch((err) => console.log(err));
   }
 
   async onDisconnectedHandler(reason) {
@@ -264,36 +264,45 @@ class TwitchChatLib {
     timeoutableMsgCheck(msg, context, target);
 
     if (msg.startsWith("!")) {
-      if (target == Bot.channels[4] || target == Bot.channels[5]) {
+      if (target == Bot.channels[4] || target == Bot.channels[0]) {
         let args = msg.split(" ");
         let commandName = args[0].slice(1);
         let mentionUser = args[1];
         let Author = context["display-name"];
 
-        let command = await commandDataBaseQuery({ aliases: commandName });
-        if (command == null)
-          return console.log("Failed to load command " + commandName);
-
-        switch (commandName) {
-          case "commands" || "command":
+        let commandDB = await commandDataBaseQuery({ aliases: commandName });
+        if (!commandDB)
+          return console.log(chalk.white("Failed to load command ") + chalk.bold.red(commandName));
+        if (commandDB.name.startsWith("-"))
+          return console.log(chalk.bold.red(commandName) + chalk.white(" has been disabled"));
+        if (commandDB) console.log(chalk.bold.greenBright(commandName) + chalk.white(" successfully loaded"));
+        switch (commandDB.name) {
+          case "command":
             let names = ""
             let database = MongoDBclient.db("twitch");
             let settingsDataBase = database.collection("commands");
             let result = await settingsDataBase.find().toArray(function(err, result) {
+              
               if (err) throw err;
               let names = "";
               // iterate through each element of the array and add the value name to a string
-              result.sort().forEach(function(doc, index) {
+              result.forEach(function(doc, index) {
+                if (doc.name.startsWith("-")) return
                 names += doc.name;
                 if (index !== result.length - 1) {
                   names += ", ";
                 }
               });
-              CLIENTS["BOT"].say(
+              CLIENTS["BOT"].action(
                 target,
                 `This channel has access to the following commands: ${names}`
                 );
             })
+            break;
+
+          case "rank":
+            let rankinfo = await GetRank()
+            CLIENTS["BOT"].say(target, rankinfo);
             break;
 
           case "uptime":
@@ -310,24 +319,8 @@ class TwitchChatLib {
             );
             break;
 
-          case "prime":
-            CLIENTS["BOT"].say(
-              target,
-              `Subscribe and support ${RemoveHashtag(
-                target
-              )} with Twitch Prime! Every month, Twitch Prime members get a free subscription on Twitch.tv, exclusive in-game loot, free games PLUS all the benefits included with Amazon Prime. https://www.twitch.tv/prime`
-            );
-            break;
-
           case "lurk":
-            CLIENTS["BOT"].say(target, `/me ${Author} ${command.data}`);
-            break;
-
-          case "sub" || "subscribe":
-            CLIENTS["BOT"].say(
-              target,
-              `https://www.twitch.tv/subs/${RemoveHashtag(target)}!`
-            );
+            CLIENTS["BOT"].action(target, Author + commandDB.data);
             break;
 
           case "time":
@@ -345,21 +338,7 @@ class TwitchChatLib {
               }
             );
             break;
-
-          case "tip":
-            CLIENTS["BOT"].say(
-              target,
-              `You can tip here: https://streamlabs.com/${RemoveHashtag(
-                target
-              )}/tip!`
-            );
-
-            break;
-
-          case "tiktok":
-            CLIENTS["BOT"].say(target, command.data);
-            break;
-
+          
           case "hug":
             if (!mentionUser) return;
             if (args.count < 2) return;
@@ -369,33 +348,26 @@ class TwitchChatLib {
             );
             break;
 
-          case "discord":
-            CLIENTS["BOT"].say(target, command.data);
-            break;
-
-          case "rank":
-            CLIENTS["BOT"].say(target, GetRank());
-            break;
-
-          case "dino":
-            CLIENTS["BOT"].say(target, command.data);
-            break;
-
-          case "game":
-            if (args.count < 1 || !context.mod) {
-              ReadGame(target);
-            } else {
-              CLIENTS["BOT"].say(target, `Invalid 2Outh Token`);
-            }
-            break;
-
-          case "title":
-            if (args.count < 1 || !context.mod) {
-              ReadTitle(target);
-            } else {
-              CLIENTS["BOT"].say(target, `Invalid 2Outh Token`);
-            }
-            break;
+            case "title":
+              if (args.count != 1) {
+                ReadTitle(target).then((title) => {
+                CLIENTS["BOT"].say(target, `The title is: ${title}!`)
+              })
+              } else {
+                CLIENTS["BOT"].say(target, `Invalid 2Outh Token`);
+              }
+              break;
+            
+            case "game":
+              console.log("lol");
+              if (args.count != 1) {
+                ReadGame(target).then((game) => {
+                  CLIENTS["BOT"].say(target, `The game is: ${game}!`)
+                })
+              } else {
+                CLIENTS["BOT"].say(target, `Invalid 2Outh Token`);
+              }
+              break;
 
           case "brightness":
             CLIENTS["BOT"].say(
@@ -407,6 +379,7 @@ class TwitchChatLib {
             break;
 
           case "followerage" || "followage":
+            if (mentionUser) Author = mentionUser
             needle(
               "get",
               `https://decapi.me/twitch/followage/lightbylb/${Author}`,
@@ -420,63 +393,26 @@ class TwitchChatLib {
             );
             break;
 
-          case "commercial" || "ads":
-            CLIENTS["BOT"].say(target, command.data);
-            if (context.mod) {
-              CLIENTS["LIGHT"].commercial("channel", 120).then((data) => {
-                console.log(
-                  `[TWITCH] Commercial ran in ${data.channel} for ${data.seconds}sec`
-                );
-              });
+          case "so":
+            if (!mentionUser) mentionUser = Author
+            if (modCheck(context, target)) {
+              ReadGame(mentionUser).then((game) => {
+                CLIENTS["BOT"].say(target, `Everyone go check out ${mentionUser}! They're an awesome person and deserve all the support! And they been playing ${game}`);
+
+              })
             }
             break;
 
-          case "so" || "shoutout":
-            if (context.mod) {
-              CLIENTS["BOT"].say(target, `/shoutout ${Author}`);
-            }
-            break;
-
-          case "bttv" || "7tv" || "ffz":
-            CLIENTS["BOT"].say(target, command.data);
-            break;
-
-          case "gang" || "squad" || "duo" || "playingwith":
+          case "gang":
             CLIENTS["BOT"].say(
               target,
-              `${RemoveHashtag(target)} is playing with ${command.data}`
+              `${RemoveHashtag(target)} is playing with ${commandDB.data}`
             );
             break;
 
-          case "pride":
-            CLIENTS["BOT"].say(target, command.data);
-            break;
-
-          case "uwu":
-            CLIENTS["BOT"].say(target, command.data);
-            break;
-
-          case "delay":
-            CLIENTS["BOT"].say(target, command.data);
-            break;
-
-          case "english":
-            CLIENTS["BOT"].say(
-              target,
-              command.data
-            );
-            break;
-
-          case "drops":
-            CLIENTS["BOT"].say(target, command.data);
-            break;
-
-          case "raid":
-            CLIENTS["BOT"].say(target, command.data);
-            break;
-          
           default:
-            CLIENTS["BOT"].say(target, command.data);
+            if (commandDB.data === null) return console.log(chalk.white("Failed to load command ") + chalk.bold.red(commandName) + chalk.white(" missing command data"));
+            CLIENTS["BOT"].say(target, commandDB.data);
             break;
 
         }
@@ -992,6 +928,7 @@ async function settingsDataBaseQuery(query) {
   let database = MongoDBclient.db("twitch");
   let settingsDataBase = database.collection("settings");
   let result = await settingsDataBase.findOne(query);
+  
   return result;
 }
 
@@ -999,6 +936,7 @@ async function commandDataBaseQuery(query) {
   let database = MongoDBclient.db("twitch");
   let settingsDataBase = database.collection("commands");
   let result = await settingsDataBase.findOne(query);
+  
   return result;
 }
 
@@ -1006,6 +944,7 @@ async function streamerDataBaseQuery(query) {
   let database = MongoDBclient.db("twitch");
   let settingsDataBase = database.collection("streamers");
   let result = await settingsDataBase.findOne(query);
+  
   return result;
 }
 
@@ -1015,37 +954,56 @@ function RemoveHashtag(channel) {
 }
 
 async function GetRank() {
-  await leagueJs.League.gettingLeagueEntriesForSummonerId(
-    process.env.RIOTSUMMONERID,
-    process.env.RIOTREGION
-  ).then((data) => {
-    "use strict";
-    if ((data = null)) return (Rank = "Unranked");
-    console.log(data);
-    return `Solo/Duo: ${data[0].tier} ${data[0].rank} at ${data[0].leaguePoints} LP. Flex: ${data[1].tier} ${data[1].rank} at ${data[1].leaguePoints}LP `;
-  });
+  try {
+    const data = await leagueJs.League.gettingLeagueEntriesForSummonerId(
+      process.env.RIOTSUMMONERID,
+      process.env.RIOTREGION
+    );
+    const [soloQ, flexQ] = data;
+    const rankInfo = data.length === 1
+      ? `${soloQ.queueType}: ${soloQ.tier} ${soloQ.rank} at ${soloQ.leaguePoints} LP.`
+      : `${soloQ.queueType}: ${soloQ.tier} ${soloQ.rank} at ${soloQ.leaguePoints} LP. ${flexQ.queueType}: ${flexQ.tier} ${flexQ.rank} at ${flexQ.leaguePoints} LP.`;
+    return rankInfo;
+  } catch (error) {
+    console.log(error);
+    return "Error getting rank info";
+  }
 }
 
 function ReadGame(target) {
-  needle(
-    "get",
-    `https://decapi.me/twitch/game/${RemoveHashtag(target)}`,
-    function (error, response) {
-      if (!error && response.statusCode == 200)
-        CLIENTS["BOT"].say(target, `The game is: ${response.body}!`);
-    }
-  );
+  return new Promise((resolve, reject) => {
+    needle(
+      "get",
+      `https://decapi.me/twitch/game/${RemoveHashtag(target)}`,
+      function (error, response) {
+        if (error) {
+          reject(error);
+        } else if (response.statusCode != 200) {
+          reject(`API returned status code ${response.statusCode}`);
+        } else {
+          resolve(response.body);
+        }
+      }
+    );
+  });
 }
 
 function ReadTitle(target) {
-  needle(
-    "get",
-    `https://decapi.me/twitch/title/${RemoveHashtag(target)}`,
-    function (error, response) {
-      if (!error && response.statusCode == 200)
-        CLIENTS["BOT"].say(target, `The title is: ${response.body}!`);
-    }
-  );
+  return new Promise((resolve, reject) => {
+    needle(
+      "get",
+      `https://decapi.me/twitch/title/${RemoveHashtag(target)}`,
+      function (error, response) {
+        if (error) {
+          reject(error);
+        } else if (response.statusCode != 200) {
+          reject(`API returned status code ${response.statusCode}`);
+        } else {
+          resolve(response.body);
+        }
+      }
+    );
+  });
 }
 
 async function BannableMsgCheck(msg, context, target) {
@@ -1183,6 +1141,9 @@ function isNotEnglish(str) {
   return /[^\u0000-\u007F]+/.test(str);
 }
 
+function modCheck(user, channel) {
+  return (user.mod || user.username === RemoveHashtag(channel))
+}
 let botclients = new BotClients();
 botclients.twitchChat();
 LiveCheck();
