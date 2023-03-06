@@ -265,7 +265,7 @@ class TwitchChatLib {
 
     if (msg.startsWith("!")) {
       if (target == Bot.channels[4] || target == Bot.channels[0]) {
-        let args = msg.split(" ");
+        let args = message.split(" ");
         let commandName = args[0].slice(1);
         let mentionUser = args[1];
         let Author = context["display-name"];
@@ -348,7 +348,7 @@ class TwitchChatLib {
             );
             break;
 
-            case "title":
+          case "title":
               if (args.count != 1) {
                 ReadTitle(target).then((title) => {
                 CLIENTS["BOT"].say(target, `The title is: ${title}!`)
@@ -358,7 +358,7 @@ class TwitchChatLib {
               }
               break;
             
-            case "game":
+          case "game":
               console.log("lol");
               if (args.count != 1) {
                 ReadGame(target).then((game) => {
@@ -409,6 +409,79 @@ class TwitchChatLib {
               `${RemoveHashtag(target)} is playing with ${commandDB.data}`
             );
             break;
+
+          case "cmd":
+            if (modCheck(context, target) == false) return
+            let cmdDatabase = MongoDBclient.db("twitch");
+            let CmdsettingsDataBase = cmdDatabase.collection("commands");
+            let commandDB2 = await CmdsettingsDataBase.findOne({ name: args[2] });
+            let filter = { name: args[2] };
+            let options = { upsert: false };
+            
+              switch(args[1]){
+
+                case "create":
+                  if(commandDB2) return
+                  let NewCommandName = args[2]
+                  let NewCommandData = ""
+                    for (let i = 3; i < args.length; i += 1) {
+                      NewCommandData += `${args[i]} `;
+                    }
+
+
+                    const newCommand = {
+                      name: NewCommandName,
+                      data: NewCommandData,
+                      aliases: [ NewCommandName ]
+                    }
+                  if (commandDB2) return
+
+                  const newdoc = await CmdsettingsDataBase.insertOne(newCommand);
+                  CLIENTS["BOT"].say(target, `A command was added with the name of ${NewCommandName}`)
+                  break;
+                case "disable":
+                  if(!commandDB2) return console.log("failed to find command")
+                  console.log("enable command")
+                   
+                   let disableDoc = {
+                    $set: {
+                      name: "-" + commandDB2.name
+                    },
+                  };
+                  let disableCommand = CmdsettingsDataBase.updateOne(filter, disableDoc, options);
+                  CLIENTS["BOT"].say(target, `${commandDB2.name} was disabled`)
+                  break;
+                case "enable":
+                  commandDB2 = await CmdsettingsDataBase.findOne({ name: "-" + args[2] });
+                  if(!commandDB2) return console.log("failed to find command")
+                  console.log("enable command")
+                  filter = { name: "-" + args[2] };
+                   let enableDoc = {
+                    $set: {
+                      name: commandDB2.name.replace("-", "")
+                    },
+                  };
+                  let enableCommand = CmdsettingsDataBase.updateOne(filter, enableDoc, options);
+                  CLIENTS["BOT"].say(target, `${commandDB2.name.replace("-", "")} was enable`)
+                  break;
+                case "edit":
+                  if(!commandDB2) return console.log("failed to find command")
+                  let editedCommandData = ""
+                    for (let i = 3; i < args.length; i += 1) {
+                      editedCommandData += `${args[i]} `;
+                    }
+
+                  let editedDoc = {
+                      $set: {
+                        data: editedCommandData
+                      },
+                    };
+                    let editedCommand = CmdsettingsDataBase.updateOne(filter, editedDoc, options);
+                    CLIENTS["BOT"].say(target, `${commandDB2.name} was edited`)
+                  break;
+
+              }
+          break;
 
           default:
             if (commandDB.data === null) return console.log(chalk.white("Failed to load command ") + chalk.bold.red(commandName) + chalk.white(" missing command data"));
