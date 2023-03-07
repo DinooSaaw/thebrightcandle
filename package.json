@@ -4,6 +4,7 @@
     "dotenv": "^16.0.3"
   },
   "dependencies": {
+    "@twurple/chat": "^6.0.6",
     "dayjs": "^1.11.7",
     "discord.js": "^14.7.1",
     "leaguejs": "^2.3.1",

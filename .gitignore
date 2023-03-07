@@ -1,5 +1,6 @@
+token*.json
+token.*.json
 auth/
-test.js
 # Logs
 logs
 *.log

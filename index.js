@@ -10,10 +10,13 @@ const Bot = require("./auth/thebrightcandle.json");
 const Dino = require("./auth/dinoosaaw.json");
 const moment = require("moment");
 const { EmbedBuilder, WebhookClient } = require("discord.js");
+const fs = require('fs').promises;
 const webhookClient = new WebhookClient({ url: process.env.webhookurl });
 let leagueJs = new LeagueJS(process.env.RIOTAPI);
 let CLIENTS = [];
 let steamer = []
+
+let auth = require("./auth")
 
 class TwitchChatLib {
   async onConnectedHandler(addr, port) {
@@ -123,6 +126,7 @@ class TwitchChatLib {
     if (context.badges !== null) {
       // console.log(context.badges);
     }
+    // console.log(context);
 
     switch (context["message-type"]) {
       case "action":
@@ -264,7 +268,7 @@ class TwitchChatLib {
     timeoutableMsgCheck(msg, context, target);
 
     if (msg.startsWith("!")) {
-      if (target == Bot.channels[4] || target == Bot.channels[0]) {
+      if (target == Bot.channels[4] || target == Bot.channels[5]) {
         let args = message.split(" ");
         let commandName = args[0].slice(1);
         let mentionUser = args[1];
@@ -349,26 +353,98 @@ class TwitchChatLib {
             break;
 
           case "title":
-              if (args.count != 1) {
+              if (modCheck(context, target) && args.length > 1) {
+                const broadcaster_id = context["room-id"]
+                const tokensFile = `./tokens.${broadcaster_id}.json`
+                const headers = {
+                  "Content-Type": "application/json",
+                  "Client-Id": Dino.identity.clientID,
+                }
+                let Token
+                
+                try {
+                  const tokenData = await fs.readFile(tokensFile, 'utf-8')
+                  const obj = JSON.parse(tokenData)
+                  Token = obj.accessToken
+                } catch (error) {
+                  console.log(error)
+                  return
+                }
+              
+                const data = args.slice(1).join(' ')
+                const BodyData = { title: data }
+                headers.Authorization = "Bearer " + Token
+              
+                needle.patch(`https://api.twitch.tv/helix/channels?broadcaster_id=${broadcaster_id}`, BodyData, {headers: headers}, function(error, response) {
+                  if (!error && response.statusCode == 204) {
+                    CLIENTS["BOT"].say(target, `The new title is: ${data}`)
+                  } else {
+                    CLIENTS["BOT"].say(target, response.statusCode + " : " + response.body.message)
+                  }
+                });
+              } else {
                 ReadTitle(target).then((title) => {
-                CLIENTS["BOT"].say(target, `The title is: ${title}!`)
-              })
-              } else {
-                CLIENTS["BOT"].say(target, `Invalid 2Outh Token`);
-              }
-              break;
-            
-          case "game":
-              console.log("lol");
-              if (args.count != 1) {
-                ReadGame(target).then((game) => {
-                  CLIENTS["BOT"].say(target, `The game is: ${game}!`)
+                  CLIENTS["BOT"].say(target, `The title is: ${title}!`)
                 })
-              } else {
-                CLIENTS["BOT"].say(target, `Invalid 2Outh Token`);
               }
               break;
 
+              case "game":
+                if (modCheck(context, target) && args.length > 1) {
+                  const broadcaster_id = context["room-id"]
+                  const tokensFile = `./tokens.${broadcaster_id}.json`
+                  let headers = {
+                    "Client-Id": Dino.identity.clientID,
+                  }
+                  let Token
+                  let gameid
+                  let gamename
+                  let BodyData = { "game_id": "" }
+                                
+                  try {
+                    const tokenData = await fs.readFile(tokensFile, 'utf-8')
+                    const obj = JSON.parse(tokenData)
+                    Token = obj.accessToken
+                  } catch (error) {
+                    console.log(error)
+                    return
+                  }
+                            
+                  const data = args.slice(1).join(' ')
+                            
+                  headers.Authorization = "Bearer " + Token
+                                
+                  needle.get(`https://api.twitch.tv/helix/games?name=${data}`, {headers: headers}, function(error, response) {
+                    if (!error) {
+                      if (!response.body.data[0]) return CLIENTS["BOT"].say(target, `Error finding game: ${data}`)
+                      gameid = response.body.data[0].id
+                      gamename = response.body.data[0].name
+                      BodyData = { "game_id": gameid }
+              
+                      headers = {
+                        "Content-Type": "application/json",
+                        "Client-Id": Dino.identity.clientID,
+                        "Authorization": "Bearer " + Token
+                      }
+                      needle.patch(`https://api.twitch.tv/helix/channels?broadcaster_id=${broadcaster_id}`, BodyData, {headers: headers}, function(error, response) {
+                        if (!error && response.statusCode == 204) {
+                          CLIENTS["BOT"].say(target, `The new game is: ${data}`)
+                        } else {
+                          CLIENTS["BOT"].say(target, response.statusCode + " : " + response.body.message)
+                        }
+                      });
+                    } else {
+                      console.log(error);
+                    }
+                  });
+              
+                } else {
+                  ReadGame(target).then((game) => {
+                    CLIENTS["BOT"].say(target, `The game is: ${game}!`)
+                  })
+                }
+                break;              
+              
           case "brightness":
             CLIENTS["BOT"].say(
               target,
@@ -1217,6 +1293,7 @@ function isNotEnglish(str) {
 function modCheck(user, channel) {
   return (user.mod || user.username === RemoveHashtag(channel))
 }
+
 let botclients = new BotClients();
 botclients.twitchChat();
 LiveCheck();
